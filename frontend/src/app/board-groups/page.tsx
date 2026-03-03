@@ -139,7 +139,7 @@ export default function BoardGroupsPage() {
         title={t("boardGroups.deleteGroup")}
         description={
           <>
-            {t("boardGroups.deleteGroupDesc", { name: deleteTarget?.name })}
+            {t("boardGroups.deleteGroupDesc", { name: deleteTarget?.name ?? "" })}
           </>
         }
         errorMessage={deleteMutation.error?.message}

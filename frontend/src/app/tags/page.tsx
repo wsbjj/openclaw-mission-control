@@ -141,7 +141,7 @@ export default function TagsPage() {
         title={t("tags.deleteTag")}
         description={
           <>
-            {t("tags.deleteTagDesc", { name: deleteTarget?.name })}
+            {t("tags.deleteTagDesc", { name: deleteTarget?.name ?? "" })}
           </>
         }
         errorMessage={

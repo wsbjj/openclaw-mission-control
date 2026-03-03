@@ -172,7 +172,7 @@ export default function BoardsPage() {
         title={t("boards.deleteBoard")}
         description={
           <>
-            {t("boards.deleteBoardDesc", { name: deleteTarget?.name })}
+            {t("boards.deleteBoardDesc", { name: deleteTarget?.name ?? "" })}
           </>
         }
         errorMessage={deleteMutation.error?.message}

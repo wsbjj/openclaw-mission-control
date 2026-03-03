@@ -140,7 +140,7 @@ export default function CustomFieldsPage() {
         title={t("customFields.deleteField")}
         description={
           <>
-            {t("customFields.deleteFieldDesc", { name: deleteTarget?.field_key })}
+            {t("customFields.deleteFieldDesc", { name: deleteTarget?.field_key ?? "" })}
           </>
         }
         errorMessage={

@@ -146,7 +146,7 @@ export default function GatewaysPage() {
         title={t("gateways.deleteGateway")}
         description={
           <>
-            {t("gateways.deleteGatewayDesc", { name: deleteTarget?.name })}
+            {t("gateways.deleteGatewayDesc", { name: deleteTarget?.name ?? "" })}
           </>
         }
         errorMessage={deleteMutation.error?.message}
