@@ -23,6 +23,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import { useUrlSorting } from "@/lib/use-url-sorting";
+import { useT } from "@/lib/i18n";
 
 const CUSTOM_FIELD_SORTABLE_COLUMNS = ["field_key", "required", "updated_at"];
 
@@ -30,6 +31,7 @@ export default function CustomFieldsPage() {
   const { isSignedIn } = useAuth();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
   const queryClient = useQueryClient();
+  const t = useT();
   const { sorting, onSortingChange } = useUrlSorting({
     allowedColumnIds: CUSTOM_FIELD_SORTABLE_COLUMNS,
     defaultSorting: [{ id: "field_key", desc: false }],
@@ -81,24 +83,24 @@ export default function CustomFieldsPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to manage custom fields.",
+          message: t("customFields.signInMessage"),
           forceRedirectUrl: "/custom-fields",
           signUpForceRedirectUrl: "/custom-fields",
         }}
-        title="Custom fields"
-        description={`${customFields.length} custom field${customFields.length === 1 ? "" : "s"} configured for this organization.`}
+        title={t("customFields.title")}
+        description={`${customFields.length} ${customFields.length === 1 ? t("customFields.field") : t("customFields.fields")} ${t("customFields.total")}.`}
         headerActions={
           isAdmin ? (
             <Link
               href="/custom-fields/new"
               className={buttonVariants({ size: "md", variant: "primary" })}
             >
-              Add field
+              {t("customFields.newField")}
             </Link>
           ) : null
         }
         isAdmin={isAdmin}
-        adminOnlyMessage="Only organization owners and admins can manage custom fields."
+        adminOnlyMessage={t("customFields.adminOnly")}
         stickyHeader
       >
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -113,11 +115,10 @@ export default function CustomFieldsPage() {
             }
             onDelete={isAdmin ? setDeleteTarget : undefined}
             emptyState={{
-              title: "No custom fields yet",
-              description:
-                "Create organization-level custom fields that appear on every task.",
+              title: t("customFields.noFieldsYet"),
+              description: t("customFields.noFieldsDesc"),
               actionHref: isAdmin ? "/custom-fields/new" : undefined,
-              actionLabel: isAdmin ? "Create your first field" : undefined,
+              actionLabel: isAdmin ? t("customFields.createFirstField") : undefined,
             }}
           />
         </div>
@@ -136,19 +137,18 @@ export default function CustomFieldsPage() {
           }
         }}
         ariaLabel="Delete custom field"
-        title="Delete custom field"
+        title={t("customFields.deleteField")}
         description={
           <>
-            This will delete <strong>{deleteTarget?.field_key}</strong>. This
-            action cannot be undone.
+            {t("customFields.deleteFieldDesc", { name: deleteTarget?.field_key })}
           </>
         }
         errorMessage={
           deleteMutation.error
             ? extractApiErrorMessage(
-                deleteMutation.error,
-                "Unable to delete custom field.",
-              )
+              deleteMutation.error,
+              "Unable to delete custom field.",
+            )
             : undefined
         }
         onConfirm={handleDelete}

@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { parseApiDatetime } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
@@ -35,19 +36,21 @@ export function BoardGoalPanel({
   board,
   onStartOnboarding,
   onEdit,
+  boardId,
 }: BoardGoalPanelProps) {
+  const t = useT();
   const metricsEntries = (() => {
     if (!board?.success_metrics) return [];
     if (Array.isArray(board.success_metrics)) {
       return board.success_metrics.map((value, index) => [
-        `Metric ${index + 1}`,
+        `${t("goalPanel.metric")} ${index + 1}`,
         value,
       ]);
     }
     if (typeof board.success_metrics === "object") {
       return Object.entries(board.success_metrics);
     }
-    return [["Metric", board.success_metrics]];
+    return [[t("goalPanel.metric"), board.success_metrics]];
   })();
 
   const isGoalBoard = board?.board_type !== "general";
@@ -59,21 +62,21 @@ export function BoardGoalPanel({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Board goal
+              {t("goalPanel.boardGoal")}
             </p>
             <p className="mt-1 text-lg font-semibold text-strong">
-              {board ? "Mission overview" : "Loading board goal"}
+              {board ? t("goalPanel.missionOverview") : t("goalPanel.loadingBoardGoal")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {board ? (
               <>
                 <Badge variant={isGoalBoard ? "accent" : "outline"}>
-                  {isGoalBoard ? "Goal board" : "General board"}
+                  {isGoalBoard ? t("goalPanel.goalBoard") : t("goalPanel.generalBoard")}
                 </Badge>
                 {isGoalBoard ? (
                   <Badge variant={isConfirmed ? "success" : "warning"}>
-                    {isConfirmed ? "Confirmed" : "Needs confirmation"}
+                    {isConfirmed ? t("goalPanel.confirmed") : t("goalPanel.needsConfirmation")}
                   </Badge>
                 ) : null}
               </>
@@ -83,8 +86,8 @@ export function BoardGoalPanel({
         {board ? (
           <p className="text-sm text-muted">
             {isGoalBoard
-              ? "Track progress against the board objective and keep agents aligned."
-              : "General boards focus on tasks without formal success metrics."}
+              ? t("goalPanel.goalBoardDesc")
+              : t("goalPanel.generalBoardDesc")}
           </p>
         ) : (
           <div className="h-4 w-32 animate-pulse rounded-full bg-[color:var(--surface-muted)]" />
@@ -93,7 +96,7 @@ export function BoardGoalPanel({
       <CardContent className="space-y-4 pt-5">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            Objective
+            {t("goalPanel.objective")}
           </p>
           <p
             className={cn(
@@ -102,12 +105,12 @@ export function BoardGoalPanel({
             )}
           >
             {board?.objective ||
-              (isGoalBoard ? "No objective yet." : "Not required.")}
+              (isGoalBoard ? t("goalPanel.noObjectiveYet") : t("goalPanel.notRequired"))}
           </p>
         </div>
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            Success metrics
+            {t("goalPanel.successMetrics")}
           </p>
           {metricsEntries.length > 0 ? (
             <ul className="space-y-1 text-sm text-strong">
@@ -120,13 +123,13 @@ export function BoardGoalPanel({
             </ul>
           ) : (
             <p className="text-sm text-muted">
-              {isGoalBoard ? "No metrics defined yet." : "Not required."}
+              {isGoalBoard ? t("goalPanel.noMetricsDefinedYet") : t("goalPanel.notRequired")}
             </p>
           )}
         </div>
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            Target date
+            {t("goalPanel.targetDate")}
           </p>
           <p className="text-sm text-strong">
             {formatTargetDate(board?.target_date)}
@@ -136,12 +139,12 @@ export function BoardGoalPanel({
           <div className="flex flex-wrap gap-2">
             {onStartOnboarding && isGoalBoard && !isConfirmed ? (
               <Button variant="primary" onClick={onStartOnboarding}>
-                Start onboarding
+                {t("goalPanel.startOnboarding")}
               </Button>
             ) : null}
             {onEdit ? (
               <Button variant="secondary" onClick={onEdit}>
-                Edit board
+                {t("goalPanel.editBoard")}
               </Button>
             ) : null}
           </div>

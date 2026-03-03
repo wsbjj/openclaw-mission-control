@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/select";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 
 type AccessScope = "all" | "custom";
 
@@ -243,6 +244,7 @@ export default function OrganizationPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const t = useT();
 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -695,7 +697,7 @@ export default function OrganizationPage() {
     <DashboardShell>
       <SignedOut>
         <SignedOutPanel
-          message="Sign in to manage your organization."
+          message={t("organization.signInMessage")}
           forceRedirectUrl="/organization"
           signUpForceRedirectUrl="/organization"
         />
@@ -709,7 +711,7 @@ export default function OrganizationPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
                     <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-                      Organization
+                      {t("organization.title")}
                     </h1>
                     <Badge
                       variant="outline"
@@ -720,26 +722,26 @@ export default function OrganizationPage() {
                     </Badge>
                   </div>
                   <p className="mt-1 text-sm text-slate-500">
-                    Manage members and board access across your workspace.
+                    {t("organization.manageMembers")}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500">
                     <span>
                       <strong className="text-slate-900">
                         {members.length}
                       </strong>{" "}
-                      members
+                      {t("organization.members")}
                     </span>
                     <span>
                       <strong className="text-slate-900">
                         {boards.length}
                       </strong>{" "}
-                      boards
+                      {t("organization.boards")}
                     </span>
                     <span>
                       <strong className="text-slate-900">
                         {invites.length}
                       </strong>{" "}
-                      pending
+                      {t("organization.pending")}
                     </span>
                   </div>
                 </div>
@@ -764,11 +766,11 @@ export default function OrganizationPage() {
                     title={
                       isAdmin
                         ? undefined
-                        : "Only organization admins can invite"
+                        : t("organization.adminOnlyInvite")
                     }
                   >
                     <UserPlus className="h-4 w-4" />
-                    Invite member
+                    {t("organization.inviteMember")}
                   </Button>
                 </div>
               </div>
@@ -780,15 +782,15 @@ export default function OrganizationPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
                 <div>
                   <h2 className="text-sm font-semibold text-slate-900">
-                    Members & invites
+                    {t("organization.membersInvites")}
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Invite teammates and tune their board permissions.
+                    {t("organization.manageMemberPermissions")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Users className="h-4 w-4" />
-                  {members.length + invites.length} total
+                  {members.length + invites.length} {t("organization.total")}
                 </div>
               </div>
               <div className="overflow-x-auto">
@@ -819,9 +821,9 @@ export default function OrganizationPage() {
       <Dialog open={inviteDialogOpen} onOpenChange={handleInviteDialogChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invite a member</DialogTitle>
+            <DialogTitle>{t("organization.inviteMemberTitle")}</DialogTitle>
             <DialogDescription>
-              Grant access to all boards or select specific workspaces.
+              {t("organization.inviteDesc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -830,7 +832,7 @@ export default function OrganizationPage() {
               <div className="grid gap-4 sm:grid-cols-[1fr_200px]">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Email address
+                    {t("organization.emailAddress")}
                   </label>
                   <Input
                     value={inviteEmail}
@@ -842,15 +844,15 @@ export default function OrganizationPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Role
+                    {t("organization.role")}
                   </label>
                   <Select value={inviteRole} onValueChange={setInviteRole}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder={t("organization.selectRole")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="member">{t("organization.member")}</SelectItem>
+                      <SelectItem value="admin">{t("organization.admin")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -883,18 +885,18 @@ export default function OrganizationPage() {
                   variant="outline"
                   onClick={() => setInviteDialogOpen(false)}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button type="submit" disabled={createInviteMutation.isPending}>
                   {createInviteMutation.isPending
-                    ? "Sending invite..."
-                    : "Send invite"}
+                    ? t("organization.sendingInvite")
+                    : t("organization.sendInvite")}
                 </Button>
               </DialogFooter>
             </form>
           ) : (
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              Only organization admins can invite new members.
+              {t("organization.adminOnlyInviteMessage")}
             </div>
           )}
         </DialogContent>
@@ -903,15 +905,15 @@ export default function OrganizationPage() {
       <Dialog open={accessDialogOpen} onOpenChange={handleAccessDialogChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Manage member access</DialogTitle>
+            <DialogTitle>{t("organization.manageMemberAccess")}</DialogTitle>
             <DialogDescription>
-              Adjust board permissions and role for this teammate.
+              {t("organization.manageMemberAccessDesc")}
             </DialogDescription>
           </DialogHeader>
 
           {memberDetailsQuery.isLoading ? (
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              Loading member access...
+              {t("organization.loadingMemberAccess")}
             </div>
           ) : memberDetailsQuery.data?.status === 200 ? (
             <div className="space-y-6">
@@ -930,19 +932,19 @@ export default function OrganizationPage() {
 
               <div className="space-y-3">
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Role
+                  {t("organization.role")}
                 </label>
                 <Select
                   value={resolvedAccessRole}
                   onValueChange={setAccessRole}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={t("organization.selectRole")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="owner">Owner</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="owner">{t("organization.owner")}</SelectItem>
+                    <SelectItem value="member">{t("organization.member")}</SelectItem>
+                    <SelectItem value="admin">{t("organization.admin")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -968,7 +970,7 @@ export default function OrganizationPage() {
             </div>
           ) : (
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              Unable to load member access.
+              {t("organization.unableToLoadMemberAccess")}
             </div>
           )}
 
@@ -983,7 +985,7 @@ export default function OrganizationPage() {
                   setRemoveMemberOpen(true);
                 }}
               >
-                Remove member
+                {t("organization.removeMember")}
               </Button>
             ) : null}
             <Button
@@ -991,7 +993,7 @@ export default function OrganizationPage() {
               variant="outline"
               onClick={() => setAccessDialogOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
@@ -1003,9 +1005,9 @@ export default function OrganizationPage() {
               }
             >
               {updateMemberAccessMutation.isPending ||
-              updateMemberRoleMutation.isPending
-                ? "Saving..."
-                : "Save changes"}
+                updateMemberRoleMutation.isPending
+                ? t("organization.saving")
+                : t("organization.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1019,19 +1021,17 @@ export default function OrganizationPage() {
           }
         }}
         ariaLabel="Delete organization"
-        title="Delete organization"
+        title={t("organization.deleteOrg")}
         description={
           <>
-            This will permanently delete <strong>{orgName}</strong>, including
-            boards, groups, gateways, members, and invites. This action cannot
-            be undone.
+            {t("organization.deleteOrgDesc", { name: orgName })}
           </>
         }
         errorMessage={deleteOrganizationMutation.error?.message}
         onConfirm={handleDeleteOrganization}
         isConfirming={deleteOrganizationMutation.isPending}
-        confirmLabel="Delete organization"
-        confirmingLabel="Deleting…"
+        confirmLabel={t("organization.deleteOrg")}
+        confirmingLabel={t("organization.deleting")}
       />
       <ConfirmActionDialog
         open={removeMemberOpen}
@@ -1042,24 +1042,24 @@ export default function OrganizationPage() {
           }
         }}
         ariaLabel="Remove organization member"
-        title="Remove member"
+        title={t("organization.removeMemberTitle")}
         description={
           <>
-            Remove{" "}
+            {t("organization.removeMemberDesc")}{" "}
             <strong>
               {memberDetails?.user?.name ||
                 memberDetails?.user?.preferred_name ||
                 memberDetails?.user?.email ||
-                "this member"}
+                t("organization.thisMember")}
             </strong>{" "}
-            from <strong>{orgName}</strong>? They will lose access immediately.
+            {t("organization.removeMemberFromOrg", { orgName })}
           </>
         }
         errorMessage={removeMemberMutation.error?.message}
         onConfirm={handleRemoveMember}
         isConfirming={removeMemberMutation.isPending}
-        confirmLabel="Remove member"
-        confirmingLabel="Removing…"
+        confirmLabel={t("organization.removeMember")}
+        confirmingLabel={t("organization.removing")}
       />
     </DashboardShell>
   );

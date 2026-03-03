@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useT } from "@/lib/i18n";
 
 export function OrgSwitcher() {
   const { isSignedIn } = useAuth();
@@ -38,6 +39,7 @@ export function OrgSwitcher() {
   const [orgName, setOrgName] = useState("");
   const [orgError, setOrgError] = useState<string | null>(null);
   const channelRef = useRef<BroadcastChannel | null>(null);
+  const t = useT();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -129,7 +131,7 @@ export function OrgSwitcher() {
   const handleCreateOrg = () => {
     const trimmed = orgName.trim();
     if (!trimmed) {
-      setOrgError("Organization name is required.");
+      setOrgError(t("orgSwitcher.nameRequired"));
       return;
     }
     createOrgMutation.mutate({
@@ -147,12 +149,12 @@ export function OrgSwitcher() {
         <SelectTrigger className="h-9 w-[220px] rounded-md border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 shadow-none focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-0">
           <span className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-slate-400" />
-            <SelectValue placeholder="Select organization" />
+            <SelectValue placeholder={t("orgSwitcher.selectOrg")} />
           </span>
         </SelectTrigger>
         <SelectContent className="min-w-[220px] rounded-md border-slate-200 p-1 shadow-xl">
           <div className="px-3 pb-2 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-            Org switcher
+            {t("orgSwitcher.label")}
           </div>
           {orgs.length ? (
             orgs.map((org) => (
@@ -169,7 +171,7 @@ export function OrgSwitcher() {
               value={orgValue}
               className="rounded-md py-2 pl-7 pr-3 text-sm text-slate-700"
             >
-              Organization
+              {t("orgSwitcher.organization")}
             </SelectItem>
           )}
           <SelectSeparator className="my-2" />
@@ -179,7 +181,7 @@ export function OrgSwitcher() {
           >
             <span className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-slate-400" />
-              Create new org
+              {t("orgSwitcher.createNewOrg")}
             </span>
           </SelectItem>
         </SelectContent>
@@ -193,10 +195,9 @@ export function OrgSwitcher() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent aria-label="Create organization">
           <DialogHeader>
-            <DialogTitle>Create a new organization</DialogTitle>
+            <DialogTitle>{t("orgSwitcher.dialogTitle")}</DialogTitle>
             <DialogDescription>
-              This will switch you to the new organization as soon as it is
-              created.
+              {t("orgSwitcher.dialogDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4 space-y-2">
@@ -204,11 +205,11 @@ export function OrgSwitcher() {
               htmlFor="org-name"
               className="text-xs font-semibold uppercase tracking-wide text-muted"
             >
-              Organization name
+              {t("orgSwitcher.orgName")}
             </label>
             <Input
               id="org-name"
-              placeholder="Acme Robotics"
+              placeholder={t("orgSwitcher.placeholder")}
               value={orgName}
               onChange={(event) => setOrgName(event.target.value)}
             />
@@ -222,14 +223,14 @@ export function OrgSwitcher() {
               variant="ghost"
               onClick={() => setCreateOpen(false)}
             >
-              Cancel
+              {t("orgSwitcher.cancel")}
             </Button>
             <Button
               type="button"
               onClick={handleCreateOrg}
               disabled={createOrgMutation.isPending}
             >
-              {createOrgMutation.isPending ? "Creating..." : "Create org"}
+              {createOrgMutation.isPending ? t("orgSwitcher.creating") : t("orgSwitcher.createOrg")}
             </Button>
           </DialogFooter>
         </DialogContent>

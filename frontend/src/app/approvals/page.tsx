@@ -18,6 +18,7 @@ import { BoardApprovalsPanel } from "@/components/BoardApprovalsPanel";
 import { DashboardSidebar } from "@/components/organisms/DashboardSidebar";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 
 type GlobalApprovalsData = {
   approvals: ApprovalRead[];
@@ -185,17 +186,18 @@ function GlobalApprovalsInner() {
 }
 
 export default function GlobalApprovalsPage() {
+  const t = useT();
   return (
     <DashboardShell>
       <SignedOut>
         <div className="flex h-full flex-col items-center justify-center gap-4 rounded-2xl surface-panel p-10 text-center">
-          <p className="text-sm text-muted">Sign in to view approvals.</p>
+          <p className="text-sm text-muted">{t("approvals.signInMessage")}</p>
           <SignInButton
             mode="modal"
             forceRedirectUrl="/approvals"
             signUpForceRedirectUrl="/approvals"
           >
-            <Button>Sign in</Button>
+            <Button>{t("common.signIn")}</Button>
           </SignInButton>
         </div>
       </SignedOut>

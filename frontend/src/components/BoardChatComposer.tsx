@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -45,12 +46,13 @@ const findMentionTarget = (
 };
 
 function BoardChatComposerImpl({
-  placeholder = "Message the board lead. Tag agents with @name.",
+  placeholder,
   isSending = false,
   disabled = false,
   mentionSuggestions,
   onSend,
 }: BoardChatComposerProps) {
+  const t = useT();
   const [value, setValue] = useState("");
   const [mentionTarget, setMentionTarget] = useState<MentionTarget | null>(
     null,
@@ -222,7 +224,7 @@ function BoardChatComposerImpl({
             event.preventDefault();
             void send();
           }}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("chat.placeholder")}
           className="min-h-[120px]"
           disabled={isSending || disabled}
         />
@@ -237,14 +239,13 @@ function BoardChatComposerImpl({
                     event.preventDefault();
                     applyMentionSelection(option);
                   }}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
-                    index === activeIndex
+                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${index === activeIndex
                       ? "bg-slate-100 text-slate-900"
                       : "text-slate-700 hover:bg-slate-50"
-                  }`}
+                    }`}
                 >
                   <span className="font-mono">@{option}</span>
-                  <span className="text-xs text-slate-400">mention</span>
+                  <span className="text-xs font-medium text-slate-500">{t("chat.mention")}</span>
                 </button>
               ))}
             </div>
@@ -256,7 +257,7 @@ function BoardChatComposerImpl({
           onClick={() => void send()}
           disabled={isSending || disabled || !value.trim()}
         >
-          {isSending ? "Sending…" : "Send"}
+          {isSending ? t("chat.sending") : t("chat.send")}
         </Button>
       </div>
     </div>

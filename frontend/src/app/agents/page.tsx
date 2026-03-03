@@ -12,6 +12,7 @@ import { AgentsTable } from "@/components/agents/AgentsTable";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
+import { useT } from "@/lib/i18n";
 
 import { ApiError } from "@/api/mutator";
 import {
@@ -43,6 +44,7 @@ export default function AgentsPage() {
   const { isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const t = useT();
 
   const { isAdmin } = useOrganizationMembership(isSignedIn);
   const { sorting, onSortingChange } = useUrlSorting({
@@ -125,21 +127,21 @@ export default function AgentsPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to view agents.",
+          message: t("agents.signInMessage"),
           forceRedirectUrl: "/agents",
           signUpForceRedirectUrl: "/agents",
         }}
-        title="Agents"
-        description={`${agents.length} agent${agents.length === 1 ? "" : "s"} total.`}
+        title={t("agents.title")}
+        description={`${agents.length} ${agents.length === 1 ? t("agents.agent") : t("agents.agents")} ${t("agents.total")}.`}
         headerActions={
           agents.length > 0 ? (
             <Button onClick={() => router.push("/agents/new")}>
-              New agent
+              {t("agents.newAgent")}
             </Button>
           ) : null
         }
         isAdmin={isAdmin}
-        adminOnlyMessage="Only organization owners and admins can access agents."
+        adminOnlyMessage={t("agents.adminOnly")}
         stickyHeader
       >
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -153,11 +155,10 @@ export default function AgentsPage() {
             stickyHeader
             onDelete={setDeleteTarget}
             emptyState={{
-              title: "No agents yet",
-              description:
-                "Create your first agent to start executing tasks on this board.",
+              title: t("agents.noAgentsYet"),
+              description: t("agents.noAgentsDesc"),
               actionHref: "/agents/new",
-              actionLabel: "Create your first agent",
+              actionLabel: t("agents.createFirstAgent"),
             }}
           />
         </div>
@@ -177,10 +178,10 @@ export default function AgentsPage() {
           }
         }}
         ariaLabel="Delete agent"
-        title="Delete agent"
+        title={t("agents.deleteAgent")}
         description={
           <>
-            This will remove {deleteTarget?.name}. This action cannot be undone.
+            {t("agents.deleteAgentDesc", { name: deleteTarget?.name })}
           </>
         }
         errorMessage={deleteMutation.error?.message}

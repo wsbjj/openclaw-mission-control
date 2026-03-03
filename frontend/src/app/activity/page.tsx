@@ -43,6 +43,7 @@ import {
 import { apiDatetimeToMs, parseApiDatetime } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 import { usePageActive } from "@/hooks/usePageActive";
+import { useT } from "@/lib/i18n";
 
 const SSE_RECONNECT_BACKOFF = {
   baseMs: 1_000,
@@ -303,6 +304,7 @@ export default function ActivityPage() {
 
   const { isSignedIn } = useAuth();
   const isPageActive = usePageActive();
+  const t = useT();
 
   const membershipQuery = useGetMyMembershipApiV1OrganizationsMeMemberGet<
     getMyMembershipApiV1OrganizationsMeMemberGetResponse,
@@ -556,7 +558,7 @@ export default function ActivityPage() {
         (previous?.name !== agent.name ||
           previous?.is_board_lead !== agent.is_board_lead ||
           JSON.stringify(previous?.identity_profile ?? {}) !==
-            JSON.stringify(agent.identity_profile ?? {}));
+          JSON.stringify(agent.identity_profile ?? {}));
 
       let kind: FeedEventType;
       if (isSnapshot) {
@@ -1291,7 +1293,7 @@ export default function ActivityPage() {
         <>
           <SignedOut>
             <SignedOutPanel
-              message="Sign in to view the feed."
+              message={t("activity.signInMessage")}
               forceRedirectUrl="/activity"
               signUpForceRedirectUrl="/activity"
               mode="redirect"
@@ -1308,12 +1310,11 @@ export default function ActivityPage() {
                       <div className="flex items-center gap-2">
                         <ActivityIcon className="h-5 w-5 text-slate-600" />
                         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-                          Live feed
+                          {t("activity.title")}
                         </h1>
                       </div>
                       <p className="mt-1 text-sm text-slate-500">
-                        Realtime task, approval, agent, and board-chat activity
-                        across all boards.
+                        {t("activity.description")}
                       </p>
                     </div>
                   </div>

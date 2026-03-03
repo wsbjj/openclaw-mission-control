@@ -23,6 +23,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import { useUrlSorting } from "@/lib/use-url-sorting";
+import { useT } from "@/lib/i18n";
 
 const TAG_SORTABLE_COLUMNS = ["name", "task_count", "updated_at"];
 
@@ -37,6 +38,7 @@ export default function TagsPage() {
   const { isAdmin } = useOrganizationMembership(isSignedIn);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const t = useT();
   const { sorting, onSortingChange } = useUrlSorting({
     allowedColumnIds: TAG_SORTABLE_COLUMNS,
     defaultSorting: [{ id: "name", desc: false }],
@@ -80,24 +82,24 @@ export default function TagsPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to manage tags.",
+          message: t("tags.signInMessage"),
           forceRedirectUrl: "/tags",
           signUpForceRedirectUrl: "/tags",
         }}
-        title="Tags"
-        description={`${tags.length} tag${tags.length === 1 ? "" : "s"} configured.`}
+        title={t("tags.title")}
+        description={`${tags.length} ${tags.length === 1 ? t("tags.tag") : t("tags.tags")} ${t("tags.total")}.`}
         headerActions={
           isAdmin ? (
             <Link
               href="/tags/add"
               className={buttonVariants({ size: "md", variant: "primary" })}
             >
-              New tag
+              {t("tags.newTag")}
             </Link>
           ) : null
         }
         isAdmin={isAdmin}
-        adminOnlyMessage="Only organization owners and admins can manage tags."
+        adminOnlyMessage={t("tags.adminOnly")}
         stickyHeader
       >
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -110,17 +112,16 @@ export default function TagsPage() {
             onEdit={
               isAdmin
                 ? (tag) => {
-                    router.push(`/tags/${tag.id}/edit`);
-                  }
+                  router.push(`/tags/${tag.id}/edit`);
+                }
                 : undefined
             }
             onDelete={isAdmin ? setDeleteTarget : undefined}
             emptyState={{
-              title: "No tags yet",
-              description:
-                "Create tags to classify and group tasks across your boards.",
+              title: t("tags.noTagsYet"),
+              description: t("tags.noTagsDesc"),
               actionHref: isAdmin ? "/tags/add" : undefined,
-              actionLabel: isAdmin ? "Create your first tag" : undefined,
+              actionLabel: isAdmin ? t("tags.addFirstTag") : undefined,
             }}
           />
         </div>
@@ -137,11 +138,10 @@ export default function TagsPage() {
           if (!open) setDeleteTarget(null);
         }}
         ariaLabel="Delete tag"
-        title="Delete tag"
+        title={t("tags.deleteTag")}
         description={
           <>
-            This will remove <strong>{deleteTarget?.name}</strong> from all
-            tagged tasks. This action cannot be undone.
+            {t("tags.deleteTagDesc", { name: deleteTarget?.name })}
           </>
         }
         errorMessage={

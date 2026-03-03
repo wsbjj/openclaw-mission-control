@@ -25,11 +25,14 @@ import {
   useHealthzHealthzGet,
 } from "@/api/generated/default/default";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
+import { LanguageToggle } from "@/components/ui/language-toggle";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
+  const t = useT();
   const healthQuery = useHealthzHealthzGet<healthzHealthzGetResponse, ApiError>(
     {
       query: {
@@ -52,21 +55,21 @@ export function DashboardSidebar() {
           : "unknown";
   const statusLabel =
     systemStatus === "operational"
-      ? "All systems operational"
+      ? t("status.allSystemsOperational")
       : systemStatus === "unknown"
-        ? "System status unavailable"
-        : "System degraded";
+        ? t("status.systemStatusUnavailable")
+        : t("status.systemDegraded");
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
       <div className="flex-1 px-3 py-4">
         <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Navigation
+          {t("nav.navigation")}
         </p>
         <nav className="mt-3 space-y-4 text-sm">
           <div>
             <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Overview
+              {t("nav.overview")}
             </p>
             <div className="mt-1 space-y-1">
               <Link
@@ -79,7 +82,7 @@ export function DashboardSidebar() {
                 )}
               >
                 <BarChart3 className="h-4 w-4" />
-                Dashboard
+                {t("nav.dashboard")}
               </Link>
               <Link
                 href="/activity"
@@ -91,14 +94,14 @@ export function DashboardSidebar() {
                 )}
               >
                 <Activity className="h-4 w-4" />
-                Live feed
+                {t("nav.liveFeed")}
               </Link>
             </div>
           </div>
 
           <div>
             <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Boards
+              {t("nav.boards")}
             </p>
             <div className="mt-1 space-y-1">
               <Link
@@ -111,7 +114,7 @@ export function DashboardSidebar() {
                 )}
               >
                 <Folder className="h-4 w-4" />
-                Board groups
+                {t("nav.boardGroups")}
               </Link>
               <Link
                 href="/boards"
@@ -123,7 +126,7 @@ export function DashboardSidebar() {
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />
-                Boards
+                {t("nav.boards")}
               </Link>
               <Link
                 href="/tags"
@@ -135,7 +138,7 @@ export function DashboardSidebar() {
                 )}
               >
                 <Tags className="h-4 w-4" />
-                Tags
+                {t("nav.tags")}
               </Link>
               <Link
                 href="/approvals"
@@ -147,7 +150,7 @@ export function DashboardSidebar() {
                 )}
               >
                 <CheckCircle2 className="h-4 w-4" />
-                Approvals
+                {t("nav.approvals")}
               </Link>
               {isAdmin ? (
                 <Link
@@ -160,7 +163,7 @@ export function DashboardSidebar() {
                   )}
                 >
                   <Settings className="h-4 w-4" />
-                  Custom fields
+                  {t("nav.customFields")}
                 </Link>
               ) : null}
             </div>
@@ -170,7 +173,7 @@ export function DashboardSidebar() {
             {isAdmin ? (
               <>
                 <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  Skills
+                  {t("nav.skills")}
                 </p>
                 <div className="mt-1 space-y-1">
                   <Link
@@ -184,7 +187,7 @@ export function DashboardSidebar() {
                     )}
                   >
                     <Store className="h-4 w-4" />
-                    Marketplace
+                    {t("nav.marketplace")}
                   </Link>
                   <Link
                     href="/skills/packs"
@@ -196,7 +199,7 @@ export function DashboardSidebar() {
                     )}
                   >
                     <Boxes className="h-4 w-4" />
-                    Packs
+                    {t("nav.packs")}
                   </Link>
                 </div>
               </>
@@ -205,7 +208,7 @@ export function DashboardSidebar() {
 
           <div>
             <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Administration
+              {t("nav.administration")}
             </p>
             <div className="mt-1 space-y-1">
               <Link
@@ -218,7 +221,7 @@ export function DashboardSidebar() {
                 )}
               >
                 <Building2 className="h-4 w-4" />
-                Organization
+                {t("nav.organization")}
               </Link>
               {isAdmin ? (
                 <Link
@@ -231,7 +234,7 @@ export function DashboardSidebar() {
                   )}
                 >
                   <Network className="h-4 w-4" />
-                  Gateways
+                  {t("nav.gateways")}
                 </Link>
               ) : null}
               {isAdmin ? (
@@ -245,14 +248,15 @@ export function DashboardSidebar() {
                   )}
                 >
                   <Bot className="h-4 w-4" />
-                  Agents
+                  {t("nav.agents")}
                 </Link>
               ) : null}
             </div>
           </div>
         </nav>
       </div>
-      <div className="border-t border-slate-200 p-4">
+      <div className="border-t border-slate-200 p-4 space-y-3">
+        <LanguageToggle />
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <span
             className={cn(

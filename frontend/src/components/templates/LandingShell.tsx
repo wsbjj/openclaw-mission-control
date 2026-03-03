@@ -11,9 +11,12 @@ import {
 } from "@/auth/clerk";
 
 import { UserMenu } from "@/components/organisms/UserMenu";
+import { LanguageToggle } from "@/components/ui/language-toggle";
+import { useT } from "@/lib/i18n";
 
 export function LandingShell({ children }: { children: ReactNode }) {
   const clerkEnabled = isClerkEnabled();
+  const t = useT();
 
   return (
     <div className="landing-enterprise">
@@ -30,10 +33,10 @@ export function LandingShell({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="nav-links">
-            <Link href="#capabilities">Capabilities</Link>
-            <Link href="/boards">Boards</Link>
-            <Link href="/activity">Activity</Link>
-            <Link href="/gateways">Gateways</Link>
+            <Link href="#capabilities">{t("nav.capabilities")}</Link>
+            <Link href="/boards">{t("landingShell.boards")}</Link>
+            <Link href="/activity">{t("nav.activity")}</Link>
+            <Link href="/gateways">{t("nav.gateways")}</Link>
           </div>
 
           <div className="nav-cta">
@@ -46,7 +49,7 @@ export function LandingShell({ children }: { children: ReactNode }) {
                     signUpForceRedirectUrl="/onboarding"
                   >
                     <button type="button" className="btn-secondary">
-                      Sign In
+                      {t("landingShell.signIn")}
                     </button>
                   </SignInButton>
                   <SignInButton
@@ -55,17 +58,17 @@ export function LandingShell({ children }: { children: ReactNode }) {
                     signUpForceRedirectUrl="/onboarding"
                   >
                     <button type="button" className="btn-primary">
-                      Start Free Trial
+                      {t("landingShell.startFreeTrial")}
                     </button>
                   </SignInButton>
                 </>
               ) : (
                 <>
                   <Link href="/boards" className="btn-secondary">
-                    Boards
+                    {t("landingShell.boards")}
                   </Link>
                   <Link href="/onboarding" className="btn-primary">
-                    Get started
+                    {t("landingShell.getStarted")}
                   </Link>
                 </>
               )}
@@ -73,11 +76,12 @@ export function LandingShell({ children }: { children: ReactNode }) {
 
             <SignedIn>
               <Link href="/boards/new" className="btn-secondary">
-                Create Board
+                {t("landingShell.createBoard")}
               </Link>
               <Link href="/boards" className="btn-primary">
-                Open Boards
+                {t("landingShell.openBoards")}
               </Link>
+              <LanguageToggle />
               <UserMenu />
             </SignedIn>
           </div>
@@ -90,31 +94,31 @@ export function LandingShell({ children }: { children: ReactNode }) {
         <div className="footer-content">
           <div className="footer-brand">
             <h3>OpenClaw</h3>
-            <p>A calm command center for boards, agents, and approvals.</p>
-            <div className="footer-tagline">Realtime Execution Visibility</div>
+            <p>{t("landingShell.footerTagline")}</p>
+            <div className="footer-tagline">{t("landingShell.realtimeVisibility")}</div>
           </div>
 
           <div className="footer-column">
-            <h4>Product</h4>
+            <h4>{t("landingShell.product")}</h4>
             <div className="footer-links">
-              <Link href="#capabilities">Capabilities</Link>
-              <Link href="/boards">Boards</Link>
-              <Link href="/activity">Activity</Link>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="#capabilities">{t("nav.capabilities")}</Link>
+              <Link href="/boards">{t("landingShell.boards")}</Link>
+              <Link href="/activity">{t("nav.activity")}</Link>
+              <Link href="/dashboard">{t("landingShell.dashboard")}</Link>
             </div>
           </div>
 
           <div className="footer-column">
-            <h4>Platform</h4>
+            <h4>{t("landingShell.platform")}</h4>
             <div className="footer-links">
-              <Link href="/gateways">Gateways</Link>
-              <Link href="/agents">Agents</Link>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/gateways">{t("nav.gateways")}</Link>
+              <Link href="/agents">{t("nav.agents")}</Link>
+              <Link href="/dashboard">{t("landingShell.dashboard")}</Link>
             </div>
           </div>
 
           <div className="footer-column">
-            <h4>Access</h4>
+            <h4>{t("landingShell.access")}</h4>
             <div className="footer-links">
               <SignedOut>
                 {clerkEnabled ? (
@@ -124,25 +128,25 @@ export function LandingShell({ children }: { children: ReactNode }) {
                       forceRedirectUrl="/onboarding"
                       signUpForceRedirectUrl="/onboarding"
                     >
-                      <button type="button">Sign In</button>
+                      <button type="button">{t("landingShell.signIn")}</button>
                     </SignInButton>
                     <SignInButton
                       mode="modal"
                       forceRedirectUrl="/onboarding"
                       signUpForceRedirectUrl="/onboarding"
                     >
-                      <button type="button">Create Account</button>
+                      <button type="button">{t("landingShell.createAccount")}</button>
                     </SignInButton>
                   </>
                 ) : (
-                  <Link href="/boards">Boards</Link>
+                  <Link href="/boards">{t("landingShell.boards")}</Link>
                 )}
-                <Link href="/onboarding">Onboarding</Link>
+                <Link href="/onboarding">{t("landingShell.onboarding")}</Link>
               </SignedOut>
               <SignedIn>
-                <Link href="/boards">Open Boards</Link>
-                <Link href="/boards/new">Create Board</Link>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/boards">{t("landingShell.openSidebarBoards")}</Link>
+                <Link href="/boards/new">{t("landingShell.createSidebarBoard")}</Link>
+                <Link href="/dashboard">{t("landingShell.dashboard")}</Link>
               </SignedIn>
             </div>
           </div>
@@ -150,12 +154,12 @@ export function LandingShell({ children }: { children: ReactNode }) {
 
         <div className="footer-bottom">
           <div className="footer-copyright">
-            © {new Date().getFullYear()} OpenClaw. All rights reserved.
+            {t("landingShell.copyright", { year: new Date().getFullYear() })}
           </div>
           <div className="footer-bottom-links">
-            <Link href="#capabilities">Capabilities</Link>
-            <Link href="/boards">Boards</Link>
-            <Link href="/activity">Activity</Link>
+            <Link href="#capabilities">{t("nav.capabilities")}</Link>
+            <Link href="/boards">{t("landingShell.boards")}</Link>
+            <Link href="/activity">{t("nav.activity")}</Link>
           </div>
         </div>
       </footer>

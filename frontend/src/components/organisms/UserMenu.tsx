@@ -25,6 +25,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 
 type UserMenuProps = {
   className?: string;
@@ -40,6 +41,8 @@ export function UserMenu({
   const [open, setOpen] = useState(false);
   const { user } = useUser();
   const localMode = isLocalAuthMode();
+  const t = useT();
+
   if (!user && !localMode) return null;
 
   const avatarUrl = localMode ? null : (user?.imageUrl ?? null);
@@ -59,13 +62,11 @@ export function UserMenu({
           className={cn(
             "group inline-flex h-9 items-center gap-2 rounded-[10px] bg-transparent px-1 py-1 transition",
             "hover:bg-white/70",
-            // Avoid the default browser focus outline (often bright blue) on click.
-            // Keep a subtle, enterprise-looking focus ring for keyboard navigation.
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--neutral-300,var(--border-strong))] focus-visible:ring-offset-2 focus-visible:ring-offset-white",
             "data-[state=open]:bg-white",
             className,
           )}
-          aria-label="Open user menu"
+          aria-label={t("userMenu.openUserMenu")}
         >
           <span
             className={cn(
@@ -137,7 +138,7 @@ export function UserMenu({
               onClick={() => setOpen(false)}
             >
               <Trello className="h-4 w-4 text-[color:var(--neutral-700,var(--text-quiet))]" />
-              Open boards
+              {t("userMenu.openBoards")}
             </Link>
             <Link
               href="/boards/new"
@@ -145,7 +146,7 @@ export function UserMenu({
               onClick={() => setOpen(false)}
             >
               <Plus className="h-4 w-4 opacity-90" />
-              Create board
+              {t("userMenu.createBoard")}
             </Link>
           </div>
 
@@ -153,17 +154,17 @@ export function UserMenu({
 
           {(
             [
-              { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-              { href: "/activity", label: "Activity", icon: Activity },
-              { href: "/agents", label: "Agents", icon: Bot },
-              { href: "/gateways", label: "Gateways", icon: Server },
+              { href: "/dashboard", labelKey: "userMenu.dashboard", icon: LayoutDashboard },
+              { href: "/activity", labelKey: "userMenu.activity", icon: Activity },
+              { href: "/agents", labelKey: "userMenu.agents", icon: Bot },
+              { href: "/gateways", labelKey: "userMenu.gateways", icon: Server },
               {
                 href: "/skills/marketplace",
-                label: "Skills marketplace",
+                labelKey: "userMenu.skillsMarketplace",
                 icon: Store,
               },
-              { href: "/skills/packs", label: "Skill packs", icon: Boxes },
-              { href: "/settings", label: "Settings", icon: Settings },
+              { href: "/skills/packs", labelKey: "userMenu.skillPacks", icon: Boxes },
+              { href: "/settings", labelKey: "userMenu.settings", icon: Settings },
             ] as const
           ).map((item) => (
             <Link
@@ -173,7 +174,7 @@ export function UserMenu({
               onClick={() => setOpen(false)}
             >
               <item.icon className="h-4 w-4 text-[color:var(--neutral-700,var(--text-quiet))]" />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           ))}
 
@@ -190,7 +191,7 @@ export function UserMenu({
               }}
             >
               <LogOut className="h-4 w-4 text-[color:var(--neutral-700,var(--text-quiet))]" />
-              Sign out
+              {t("userMenu.signOut")}
             </button>
           ) : (
             <SignOutButton>
@@ -200,7 +201,7 @@ export function UserMenu({
                 onClick={() => setOpen(false)}
               >
                 <LogOut className="h-4 w-4 text-[color:var(--neutral-700,var(--text-quiet))]" />
-                Sign out
+                {t("userMenu.signOut")}
               </button>
             </SignOutButton>
           )}

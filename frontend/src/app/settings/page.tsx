@@ -23,6 +23,7 @@ import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/searchable-select";
 import { getSupportedTimezones } from "@/lib/timezones";
+import { useT } from "@/lib/i18n";
 
 type ClerkGlobal = {
   signOut?: (options?: { redirectUrl?: string }) => Promise<void> | void;
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
+  const t = useT();
 
   const [name, setName] = useState("");
   const [timezone, setTimezone] = useState<string | null>(null);
@@ -77,12 +79,12 @@ export default function SettingsPage() {
     mutation: {
       onSuccess: async () => {
         setSaveError(null);
-        setSaveSuccess("Settings saved.");
+        setSaveSuccess(t("settings.saved"));
         await queryClient.invalidateQueries({ queryKey: meQueryKey });
       },
       onError: (error) => {
         setSaveSuccess(null);
-        setSaveError(error.message || "Unable to save settings.");
+        setSaveError(error.message || t("settings.saveError"));
       },
     },
   });
@@ -105,7 +107,7 @@ export default function SettingsPage() {
         router.replace("/sign-in");
       },
       onError: (error) => {
-        setDeleteError(error.message || "Unable to delete account.");
+        setDeleteError(error.message || t("settings.deleteError"));
       },
     },
   });
@@ -115,7 +117,7 @@ export default function SettingsPage() {
     if (!isSignedIn) return;
     if (!resolvedName.trim() || !resolvedTimezone.trim()) {
       setSaveSuccess(null);
-      setSaveError("Name and timezone are required.");
+      setSaveError(t("settings.nameAndTimezoneRequired"));
       return;
     }
     setSaveError(null);
@@ -143,18 +145,18 @@ export default function SettingsPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to manage your settings.",
+          message: t("settings.signInMessage"),
           forceRedirectUrl: "/settings",
           signUpForceRedirectUrl: "/settings",
         }}
-        title="Settings"
-        description="Update your profile and account preferences."
+        title={t("settings.title")}
+        description={t("settings.description")}
       >
         <div className="space-y-6">
           <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-semibold text-slate-900">Profile</h2>
+            <h2 className="text-base font-semibold text-slate-900">{t("settings.profile")}</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Keep your identity and timezone up to date.
+              {t("settings.profileDesc")}
             </p>
 
             <form onSubmit={handleSave} className="mt-6 space-y-5">
@@ -162,7 +164,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
                     <User className="h-4 w-4 text-slate-500" />
-                    Name
+                    {t("settings.name")}
                   </label>
                   <Input
                     value={resolvedName}
@@ -170,7 +172,7 @@ export default function SettingsPage() {
                       setName(event.target.value);
                       setNameEdited(true);
                     }}
-                    placeholder="Your name"
+                    placeholder={t("settings.yourName")}
                     disabled={isSaving}
                     className="border-slate-300 text-slate-900 focus-visible:ring-blue-500"
                   />
@@ -178,7 +180,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
                     <Globe className="h-4 w-4 text-slate-500" />
-                    Timezone
+                    {t("settings.timezone")}
                   </label>
                   <SearchableSelect
                     ariaLabel="Select timezone"
@@ -188,9 +190,9 @@ export default function SettingsPage() {
                       setTimezoneEdited(true);
                     }}
                     options={timezoneOptions}
-                    placeholder="Select timezone"
-                    searchPlaceholder="Search timezones..."
-                    emptyMessage="No matching timezones."
+                    placeholder={t("settings.selectTimezone")}
+                    searchPlaceholder={t("settings.searchTimezones")}
+                    emptyMessage={t("settings.noMatchingTimezones")}
                     disabled={isSaving}
                     triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                     contentClassName="rounded-xl border border-slate-200 shadow-lg"
@@ -202,7 +204,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <Mail className="h-4 w-4 text-slate-500" />
-                  Email
+                  {t("settings.email")}
                 </label>
                 <Input
                   value={displayEmail}
@@ -226,7 +228,7 @@ export default function SettingsPage() {
               <div className="flex flex-wrap gap-3">
                 <Button type="submit" disabled={isSaving}>
                   <Save className="h-4 w-4" />
-                  {isSaving ? "Saving…" : "Save settings"}
+                  {isSaving ? t("settings.saving") : t("settings.saveSettings")}
                 </Button>
                 <Button
                   type="button"
@@ -235,7 +237,7 @@ export default function SettingsPage() {
                   disabled={isSaving}
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Reset
+                  {t("settings.reset")}
                 </Button>
               </div>
             </form>
@@ -243,11 +245,10 @@ export default function SettingsPage() {
 
           <section className="rounded-xl border border-rose-200 bg-rose-50/70 p-6 shadow-sm">
             <h2 className="text-base font-semibold text-rose-900">
-              Delete account
+              {t("settings.deleteAccount")}
             </h2>
             <p className="mt-1 text-sm text-rose-800">
-              This permanently removes your Mission Control account and related
-              personal data. This action cannot be undone.
+              {t("settings.deleteAccountDesc")}
             </p>
             <div className="mt-4">
               <Button
@@ -260,7 +261,7 @@ export default function SettingsPage() {
                 disabled={deleteAccountMutation.isPending}
               >
                 <Trash2 className="h-4 w-4" />
-                Delete account
+                {t("settings.deleteAccount")}
               </Button>
             </div>
           </section>
@@ -270,13 +271,13 @@ export default function SettingsPage() {
       <ConfirmActionDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete your account?"
-        description="Your account and personal data will be permanently deleted."
+        title={t("settings.deleteAccountDialogTitle")}
+        description={t("settings.deleteAccountDialogDesc")}
         onConfirm={() => deleteAccountMutation.mutate()}
         isConfirming={deleteAccountMutation.isPending}
         errorMessage={deleteError}
-        confirmLabel="Delete account"
-        confirmingLabel="Deleting account…"
+        confirmLabel={t("settings.confirmDeleteAccount")}
+        confirmingLabel={t("settings.deletingAccount")}
         ariaLabel="Delete account confirmation"
       />
     </>

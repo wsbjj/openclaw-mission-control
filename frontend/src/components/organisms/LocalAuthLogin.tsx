@@ -7,13 +7,17 @@ import { setLocalAuthToken } from "@/auth/localAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n";
 
 const LOCAL_AUTH_TOKEN_MIN_LENGTH = 50;
 
-async function validateLocalToken(token: string): Promise<string | null> {
+async function validateLocalToken(
+  token: string,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): Promise<string | null> {
   const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!rawBaseUrl) {
-    return "NEXT_PUBLIC_API_URL is not set.";
+    return t("localAuth.apiUrlNotSetError");
   }
 
   const baseUrl = rawBaseUrl.replace(/\/+$/, "");
@@ -27,14 +31,14 @@ async function validateLocalToken(token: string): Promise<string | null> {
       },
     });
   } catch {
-    return "Unable to reach backend to validate token.";
+    return t("localAuth.tokenUnreachableError");
   }
 
   if (response.ok) {
     return null;
   }
   if (response.status === 401 || response.status === 403) {
-    return "Token is invalid.";
+    return t("localAuth.tokenInvalidError");
   }
   return `Unable to validate token (HTTP ${response.status}).`;
 }
@@ -46,6 +50,7 @@ type LocalAuthLoginProps = {
 const defaultOnAuthenticated = () => window.location.reload();
 
 export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
+  const t = useT();
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -54,18 +59,18 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
     event.preventDefault();
     const cleaned = token.trim();
     if (!cleaned) {
-      setError("Bearer token is required.");
+      setError(t("localAuth.tokenRequiredError"));
       return;
     }
     if (cleaned.length < LOCAL_AUTH_TOKEN_MIN_LENGTH) {
       setError(
-        `Bearer token must be at least ${LOCAL_AUTH_TOKEN_MIN_LENGTH} characters.`,
+        t("localAuth.tokenTooShortError", { min: LOCAL_AUTH_TOKEN_MIN_LENGTH }),
       );
       return;
     }
 
     setIsValidating(true);
-    const validationError = await validateLocalToken(cleaned);
+    const validationError = await validateLocalToken(cleaned, t);
     setIsValidating(false);
     if (validationError) {
       setError(validationError);
@@ -88,7 +93,7 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
         <CardHeader className="space-y-5 border-b border-[color:var(--border)] pb-5">
           <div className="flex items-center justify-between">
             <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-              Self-host mode
+              {t("localAuth.selfHostMode")}
             </span>
             <div className="rounded-xl bg-[color:var(--accent-soft)] p-2 text-[color:var(--accent)]">
               <Lock className="h-5 w-5" />
@@ -96,10 +101,10 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-strong">
-              Local Authentication
+              {t("localAuth.title")}
             </h1>
             <p className="text-sm text-muted">
-              Enter your access token to unlock Mission Control.
+              {t("localAuth.subtitle")}
             </p>
           </div>
         </CardHeader>
@@ -110,14 +115,14 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
                 htmlFor="local-auth-token"
                 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted"
               >
-                Access token
+                {t("localAuth.accessToken")}
               </label>
               <Input
                 id="local-auth-token"
                 type="password"
                 value={token}
                 onChange={(event) => setToken(event.target.value)}
-                placeholder="Paste token"
+                placeholder={t("localAuth.pastePlaceholder")}
                 autoFocus
                 disabled={isValidating}
                 className="font-mono"
@@ -129,7 +134,7 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
               </p>
             ) : (
               <p className="text-xs text-muted">
-                Token must be at least {LOCAL_AUTH_TOKEN_MIN_LENGTH} characters.
+                {t("localAuth.tokenMinLength", { min: LOCAL_AUTH_TOKEN_MIN_LENGTH })}
               </p>
             )}
             <Button
@@ -138,7 +143,7 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
               size="lg"
               disabled={isValidating}
             >
-              {isValidating ? "Validating..." : "Continue"}
+              {isValidating ? t("localAuth.validating") : t("localAuth.continue")}
             </Button>
           </form>
         </CardContent>

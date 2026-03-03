@@ -12,6 +12,7 @@ import { GatewaysTable } from "@/components/gateways/GatewaysTable";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { buttonVariants } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
+import { useT } from "@/lib/i18n";
 
 import { ApiError } from "@/api/mutator";
 import {
@@ -30,6 +31,7 @@ const GATEWAY_SORTABLE_COLUMNS = ["name", "workspace_root", "updated_at"];
 export default function GatewaysPage() {
   const { isSignedIn } = useAuth();
   const queryClient = useQueryClient();
+  const t = useT();
   const { sorting, onSortingChange } = useUrlSorting({
     allowedColumnIds: GATEWAY_SORTABLE_COLUMNS,
     defaultSorting: [{ id: "name", desc: false }],
@@ -91,11 +93,11 @@ export default function GatewaysPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to view gateways.",
+          message: t("gateways.signInMessage"),
           forceRedirectUrl: "/gateways",
         }}
-        title="Gateways"
-        description="Manage OpenClaw gateway connections used by boards"
+        title={t("gateways.title")}
+        description={t("gateways.noGatewaysDesc")}
         headerActions={
           isAdmin && gateways.length > 0 ? (
             <Link
@@ -105,12 +107,12 @@ export default function GatewaysPage() {
                 variant: "primary",
               })}
             >
-              Create gateway
+              {t("gateways.newGateway")}
             </Link>
           ) : null
         }
         isAdmin={isAdmin}
-        adminOnlyMessage="Only organization owners and admins can access gateways."
+        adminOnlyMessage={t("gateways.adminOnly")}
         stickyHeader
       >
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -123,11 +125,10 @@ export default function GatewaysPage() {
             stickyHeader
             onDelete={setDeleteTarget}
             emptyState={{
-              title: "No gateways yet",
-              description:
-                "Create your first gateway to connect boards and start managing your OpenClaw connections.",
+              title: t("gateways.noGatewaysYet"),
+              description: t("gateways.noGatewaysDesc"),
               actionHref: "/gateways/new",
-              actionLabel: "Create your first gateway",
+              actionLabel: t("gateways.createFirstGateway"),
             }}
           />
         </div>
@@ -142,11 +143,10 @@ export default function GatewaysPage() {
       <ConfirmActionDialog
         open={Boolean(deleteTarget)}
         onOpenChange={() => setDeleteTarget(null)}
-        title="Delete gateway?"
+        title={t("gateways.deleteGateway")}
         description={
           <>
-            This removes the gateway connection from Mission Control. Boards
-            using it will need a new gateway assigned.
+            {t("gateways.deleteGatewayDesc", { name: deleteTarget?.name })}
           </>
         }
         errorMessage={deleteMutation.error?.message}

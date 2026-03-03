@@ -22,12 +22,14 @@ import { useUrlSorting } from "@/lib/use-url-sorting";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { buttonVariants } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
+import { useT } from "@/lib/i18n";
 
 const BOARD_GROUP_SORTABLE_COLUMNS = ["name", "updated_at"];
 
 export default function BoardGroupsPage() {
   const { isSignedIn } = useAuth();
   const queryClient = useQueryClient();
+  const t = useT();
   const { sorting, onSortingChange } = useUrlSorting({
     allowedColumnIds: BOARD_GROUP_SORTABLE_COLUMNS,
     defaultSorting: [{ id: "name", desc: false }],
@@ -87,17 +89,17 @@ export default function BoardGroupsPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to view board groups.",
+          message: t("boardGroups.signInMessage"),
           forceRedirectUrl: "/board-groups",
         }}
-        title="Board groups"
-        description={`Group boards so agents can see related work. ${groups.length} group${groups.length === 1 ? "" : "s"} total.`}
+        title={t("boardGroups.title")}
+        description={`${t("boardGroups.noGroupsDesc")} ${groups.length} ${groups.length === 1 ? t("boardGroups.group") : t("boardGroups.groups")} ${t("boardGroups.total")}.`}
         headerActions={
           <Link
             href="/board-groups/new"
             className={buttonVariants({ size: "md", variant: "primary" })}
           >
-            Create group
+            {t("boardGroups.newGroup")}
           </Link>
         }
         stickyHeader
@@ -112,11 +114,10 @@ export default function BoardGroupsPage() {
             stickyHeader
             onDelete={setDeleteTarget}
             emptyState={{
-              title: "No groups yet",
-              description:
-                "Create a board group to increase cross-board visibility for agents.",
+              title: t("boardGroups.noGroupsYet"),
+              description: t("boardGroups.noGroupsDesc"),
               actionHref: "/board-groups/new",
-              actionLabel: "Create your first group",
+              actionLabel: t("boardGroups.createFirstGroup"),
             }}
           />
         </div>
@@ -135,11 +136,10 @@ export default function BoardGroupsPage() {
           }
         }}
         ariaLabel="Delete board group"
-        title="Delete board group"
+        title={t("boardGroups.deleteGroup")}
         description={
           <>
-            This will remove {deleteTarget?.name}. Boards will be ungrouped.
-            This action cannot be undone.
+            {t("boardGroups.deleteGroupDesc", { name: deleteTarget?.name })}
           </>
         }
         errorMessage={deleteMutation.error?.message}
