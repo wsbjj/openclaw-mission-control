@@ -181,7 +181,7 @@ export default function AgentsPage() {
         title={t("agents.deleteAgent")}
         description={
           <>
-            {t("agents.deleteAgentDesc", { name: deleteTarget?.name })}
+            {t("agents.deleteAgentDesc", { name: deleteTarget?.name ?? "" })}
           </>
         }
         errorMessage={deleteMutation.error?.message}
