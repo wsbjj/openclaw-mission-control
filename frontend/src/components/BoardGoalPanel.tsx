@@ -36,7 +36,6 @@ export function BoardGoalPanel({
   board,
   onStartOnboarding,
   onEdit,
-  boardId,
 }: BoardGoalPanelProps) {
   const t = useT();
   const metricsEntries = (() => {
