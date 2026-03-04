@@ -240,6 +240,11 @@ class GatewayAdminLifecycleService(OpenClawDBService):
                 agent.id,
                 action,
             )
+            if agent.status in {"updating", "provisioning"}:
+                agent.status = "offline"
+            agent.updated_at = utcnow()
+            self.session.add(agent)
+            await self.session.commit()
             raise
         self.logger.info(
             "gateway.main_agent.provision_success gateway_id=%s agent_id=%s action=%s",

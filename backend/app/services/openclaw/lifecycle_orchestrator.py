@@ -122,6 +122,8 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
         except OpenClawGatewayError as exc:
             locked.last_provision_error = str(exc)
             locked.updated_at = utcnow()
+            if locked.status in {"updating", "provisioning"}:
+                locked.status = "offline"
             self.session.add(locked)
             await self.session.commit()
             await self.session.refresh(locked)
@@ -134,6 +136,8 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
         except (OSError, RuntimeError, ValueError) as exc:
             locked.last_provision_error = str(exc)
             locked.updated_at = utcnow()
+            if locked.status in {"updating", "provisioning"}:
+                locked.status = "offline"
             self.session.add(locked)
             await self.session.commit()
             await self.session.refresh(locked)

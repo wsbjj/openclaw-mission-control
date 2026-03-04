@@ -1134,6 +1134,9 @@ class AgentLifecycleService(OpenClawDBService):
                 str(exc.detail),
                 action,
             )
+            if agent.status in {"updating", "provisioning"}:
+                agent.status = "offline"
+            self.session.add(agent)
             await self.session.commit()
             if exc.status_code == status.HTTP_502_BAD_GATEWAY:
                 self.logger.error(
@@ -1428,7 +1431,7 @@ class AgentLifecycleService(OpenClawDBService):
     ) -> AgentRead:
         if status_value:
             agent.status = status_value
-        elif agent.status == "provisioning":
+        elif agent.status in {"provisioning", "updating"}:
             agent.status = "online"
         agent.last_seen_at = utcnow()
         # Successful check-in ends the current wake escalation cycle.
