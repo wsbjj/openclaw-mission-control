@@ -198,6 +198,7 @@ async def delete_gateway(
     main_agent = await service.find_main_agent(gateway)
     if main_agent is not None:
         await service.clear_agent_foreign_keys(agent_id=main_agent.id)
+        await session.flush()
         await session.delete(main_agent)
 
     duplicate_main_agents = await Agent.objects.filter_by(
@@ -208,6 +209,7 @@ async def delete_gateway(
         if main_agent is not None and agent.id == main_agent.id:
             continue
         await service.clear_agent_foreign_keys(agent_id=agent.id)
+        await session.flush()
         await session.delete(agent)
 
     # NOTE: The migration declares `ondelete="CASCADE"` for gateway_installed_skills.gateway_id,
