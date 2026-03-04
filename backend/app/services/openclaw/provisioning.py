@@ -7,6 +7,7 @@ DB-backed workflows (template sync, lead-agent record creation) live in
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from abc import ABC, abstractmethod
@@ -569,15 +570,35 @@ class OpenClawGatewayControlPlane(GatewayControlPlane):
                 marker in message for marker in ("already", "exist", "duplicate", "conflict")
             ):
                 raise
-        await openclaw_call(
-            "agents.update",
-            {
-                "agentId": registration.agent_id,
-                "name": registration.name,
-                "workspace": registration.workspace_path,
-            },
-            config=self._config,
-        )
+        # NOTE:
+        # The gateway persists agent definitions to disk and reloads them asynchronously.
+        # Immediately calling `agents.update` after `agents.create` can race with the
+        # filesystem watcher, causing a transient "agent ... not found" error even
+        # though the create succeeded. To make provisioning robust, retry `agents.update`
+        # a few times when the gateway reports a missing agent.
+        update_params = {
+            "agentId": registration.agent_id,
+            "name": registration.name,
+            "workspace": registration.workspace_path,
+        }
+        backoff_delays = (0.1, 0.3, 0.6, 1.0)
+        last_error: OpenClawGatewayError | None = None
+        for delay in backoff_delays:
+            try:
+                await openclaw_call("agents.update", update_params, config=self._config)
+                last_error = None
+                break
+            except OpenClawGatewayError as exc:
+                if not _is_missing_agent_error(exc):
+                    raise
+                last_error = exc
+                await asyncio.sleep(delay)
+
+        if last_error is not None:
+            # Exhausted all retries and the gateway still reports a missing agent.
+            # Bubble up the original error so higher layers can record it.
+            raise last_error
+
         await self.patch_agent_heartbeats(
             [(registration.agent_id, registration.workspace_path, registration.heartbeat)],
         )
