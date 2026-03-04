@@ -133,12 +133,12 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
                 # the backing agent runtime is missing.
                 if _is_missing_agent_error(exc):
                     detail = (
-                        "Gateway reported that the target agent runtime does not exist. "
-                        "This usually means the gateway configuration is out of sync or "
-                        "the agent was deleted on the gateway. "
-                        "Try restarting the gateway or resetting its configuration, "
-                        "then retry the operation. "
-                        f"Original error: {exc}"
+                        "网关报告目标代理运行时不存在。"
+                        "这通常意味着网关配置不同步或"
+                        "网关上的代理已被删除。"
+                        "尝试重启网关或重置其配置，"
+                        "然后重试该操作。"
+                        f"原始错误: {exc}"
                     )
                 else:
                     detail = f"Gateway {action} failed: {exc}"
