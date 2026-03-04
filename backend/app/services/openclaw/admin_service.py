@@ -259,6 +259,11 @@ class GatewayAdminLifecycleService(OpenClawDBService):
                 agent.id,
                 str(exc),
             )
+            if agent.status in {"updating", "provisioning"}:
+                agent.status = "offline"
+            agent.updated_at = utcnow()
+            self.session.add(agent)
+            await self.session.commit()
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=f"Gateway {action} failed: {exc}",
@@ -270,6 +275,11 @@ class GatewayAdminLifecycleService(OpenClawDBService):
                 agent.id,
                 str(exc),
             )
+            if agent.status in {"updating", "provisioning"}:
+                agent.status = "offline"
+            agent.updated_at = utcnow()
+            self.session.add(agent)
+            await self.session.commit()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Unexpected error {action}ing gateway provisioning.",

@@ -270,3 +270,123 @@ async def test_board_onboarding_dispatch_answer_maps_timeout_error(
 
     assert exc_info.value.status_code == status.HTTP_502_BAD_GATEWAY
     assert "Gateway onboarding answer dispatch failed:" in str(exc_info.value.detail)
+
+
+# ---------------------------------------------------------------------------
+# commit_heartbeat: 修复验证 - updating 状态应被提升为 online
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class _AgentStatusStub:
+    """Minimal agent stub for commit_heartbeat tests."""
+
+    id: UUID = None  # type: ignore[assignment]
+    name: str = "Test Agent"
+    status: str = "online"
+    last_seen_at: object = None
+    updated_at: object = None
+
+    def __post_init__(self) -> None:
+        if self.id is None:
+            self.id = uuid4()
+
+
+@dataclass
+class _FakeSessionWithRefresh(_FakeSession):
+    async def refresh(self, obj: object) -> None:
+        pass
+
+
+@pytest.mark.asyncio
+async def test_commit_heartbeat_promotes_updating_to_online() -> None:
+    """Fix 2: commit_heartbeat 应当把 updating 状态的 agent 提升为 online。
+
+    修复前：只有 provisioning 状态能被自动提升，updating 会被遗漏。
+    修复后：provisioning 和 updating 都能被心跳提升为 online。
+    """
+    from app.services.openclaw.provisioning_db import AgentLifecycleService
+
+    session = _FakeSessionWithRefresh()
+    service = AgentLifecycleService(session)  # type: ignore[arg-type]
+
+    agent = _AgentStatusStub(status="updating")
+
+    # Patch to_agent_read and with_computed_status so we don't need full DB setup
+    def _fake_record_heartbeat(_session: object, _agent: object) -> None:
+        pass
+
+    def _fake_with_computed_status(a: object) -> object:
+        return a
+
+    def _fake_to_agent_read(a: object) -> object:
+        return a
+
+    service.record_heartbeat = _fake_record_heartbeat  # type: ignore[method-assign]
+    service.with_computed_status = _fake_with_computed_status  # type: ignore[method-assign]
+    service.to_agent_read = _fake_to_agent_read  # type: ignore[method-assign]
+
+    await service.commit_heartbeat(agent=agent, status_value=None)  # type: ignore[arg-type]
+
+    assert agent.status == "online", (
+        "commit_heartbeat 应当将 updating 状态的 agent 提升为 online（Fix 2）"
+    )
+    assert session.committed >= 1
+
+
+@pytest.mark.asyncio
+async def test_commit_heartbeat_explicit_status_overrides_updating() -> None:
+    """Fix 2 边界：如果显式传入 status_value，该值应优先于自动提升逻辑。"""
+    from app.services.openclaw.provisioning_db import AgentLifecycleService
+
+    session = _FakeSessionWithRefresh()
+    service = AgentLifecycleService(session)  # type: ignore[arg-type]
+
+    agent = _AgentStatusStub(status="updating")
+
+    def _fake_record_heartbeat(_session: object, _agent: object) -> None:
+        pass
+
+    def _fake_with_computed_status(a: object) -> object:
+        return a
+
+    def _fake_to_agent_read(a: object) -> object:
+        return a
+
+    service.record_heartbeat = _fake_record_heartbeat  # type: ignore[method-assign]
+    service.with_computed_status = _fake_with_computed_status  # type: ignore[method-assign]
+    service.to_agent_read = _fake_to_agent_read  # type: ignore[method-assign]
+
+    await service.commit_heartbeat(agent=agent, status_value="busy")  # type: ignore[arg-type]
+
+    assert agent.status == "busy", (
+        "显式 status_value 应优先于 updating→online 的自动提升逻辑"
+    )
+
+
+@pytest.mark.asyncio
+async def test_commit_heartbeat_promotes_provisioning_to_online() -> None:
+    """回归测试：原有的 provisioning→online 提升逻辑不应被破坏。"""
+    from app.services.openclaw.provisioning_db import AgentLifecycleService
+
+    session = _FakeSessionWithRefresh()
+    service = AgentLifecycleService(session)  # type: ignore[arg-type]
+
+    agent = _AgentStatusStub(status="provisioning")
+
+    def _fake_record_heartbeat(_session: object, _agent: object) -> None:
+        pass
+
+    def _fake_with_computed_status(a: object) -> object:
+        return a
+
+    def _fake_to_agent_read(a: object) -> object:
+        return a
+
+    service.record_heartbeat = _fake_record_heartbeat  # type: ignore[method-assign]
+    service.with_computed_status = _fake_with_computed_status  # type: ignore[method-assign]
+    service.to_agent_read = _fake_to_agent_read  # type: ignore[method-assign]
+
+    await service.commit_heartbeat(agent=agent, status_value=None)  # type: ignore[arg-type]
+
+    assert agent.status == "online", "provisioning→online 的原有逻辑不应被破坏"

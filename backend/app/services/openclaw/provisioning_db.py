@@ -1123,6 +1123,9 @@ class AgentLifecycleService(OpenClawDBService):
                 str(exc),
                 action,
             )
+            if agent.status in {"updating", "provisioning"}:
+                agent.status = "offline"
+            self.session.add(agent)
             await self.session.commit()
             self.logger.error(
                 "agent.provision.gateway_error action=%s agent_id=%s error=%s",
@@ -1142,6 +1145,9 @@ class AgentLifecycleService(OpenClawDBService):
                 str(exc),
                 action,
             )
+            if agent.status in {"updating", "provisioning"}:
+                agent.status = "offline"
+            self.session.add(agent)
             await self.session.commit()
             self.logger.critical(
                 "agent.provision.runtime_error action=%s agent_id=%s error=%s",
@@ -1433,7 +1439,7 @@ class AgentLifecycleService(OpenClawDBService):
     ) -> AgentRead:
         if status_value:
             agent.status = status_value
-        elif agent.status == "provisioning":
+        elif agent.status in {"provisioning", "updating"}:
             agent.status = "online"
         agent.last_seen_at = utcnow()
         agent.updated_at = utcnow()
