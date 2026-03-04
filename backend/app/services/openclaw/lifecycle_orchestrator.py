@@ -24,6 +24,7 @@ from app.services.openclaw.db_agent_state import (
 )
 from app.services.openclaw.db_service import OpenClawDBService
 from app.services.openclaw.gateway_rpc import OpenClawGatewayError
+from app.services.openclaw.provisioning import _is_missing_agent_error
 from app.services.openclaw.lifecycle_queue import (
     QueuedAgentLifecycleReconcile,
     enqueue_lifecycle_reconcile,
@@ -128,9 +129,22 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
             await self.session.commit()
             await self.session.refresh(locked)
             if raise_gateway_errors:
+                # Provide a more actionable message when the gateway reports that
+                # the backing agent runtime is missing.
+                if _is_missing_agent_error(exc):
+                    detail = (
+                        "Gateway reported that the target agent runtime does not exist. "
+                        "This usually means the gateway configuration is out of sync or "
+                        "the agent was deleted on the gateway. "
+                        "Try restarting the gateway or resetting its configuration, "
+                        "then retry the operation. "
+                        f"Original error: {exc}"
+                    )
+                else:
+                    detail = f"Gateway {action} failed: {exc}"
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=f"Gateway {action} failed: {exc}",
+                    detail=detail,
                 ) from exc
             return locked
         except (OSError, RuntimeError, ValueError) as exc:
