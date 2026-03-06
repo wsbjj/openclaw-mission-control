@@ -59,6 +59,7 @@ import SearchableSelect from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import { localDateInputToUtcIso, toLocalDateInput } from "@/lib/datetime";
 import { Markdown } from "@/components/atoms/Markdown";
+import { useT } from "@/lib/i18n";
 
 const slugify = (value: string) =>
   value
@@ -100,6 +101,7 @@ function WebhookCard({
   onViewPayloads,
   onUpdate,
 }: WebhookCardProps) {
+  const t = useT();
   const [isEditing, setIsEditing] = useState(false);
   const [draftDescription, setDraftDescription] = useState(webhook.description);
   const [draftAgentValue, setDraftAgentValue] = useState(
@@ -150,7 +152,9 @@ function WebhookCard({
             onClick={() => onCopy(webhook)}
             disabled={isBusy}
           >
-            {copiedWebhookId === webhook.id ? "Copied" : "Copy endpoint"}
+            {copiedWebhookId === webhook.id
+              ? t("boardEdit.webhooksCopied")
+              : t("boardEdit.webhooksCopyEndpoint")}
           </Button>
           <Button
             type="button"
@@ -158,7 +162,7 @@ function WebhookCard({
             onClick={() => onViewPayloads(webhook.id)}
             disabled={isBusy}
           >
-            View payloads
+            {t("boardEdit.webhooksViewPayloads")}
           </Button>
           {isEditing ? (
             <>
@@ -172,14 +176,16 @@ function WebhookCard({
                 }}
                 disabled={isBusy}
               >
-                Cancel
+                {t("boardEdit.webhooksCancel")}
               </Button>
               <Button
                 type="button"
                 onClick={handleSave}
                 disabled={isBusy || !trimmedDescription}
               >
-                {isUpdatingWebhook ? "Saving…" : "Save"}
+                {isUpdatingWebhook
+                  ? t("boardEdit.webhooksSaving")
+                  : t("boardEdit.webhooksSave")}
               </Button>
             </>
           ) : (
@@ -194,7 +200,7 @@ function WebhookCard({
                 }}
                 disabled={isBusy}
               >
-                Edit
+                {t("boardEdit.webhooksEdit")}
               </Button>
               <Button
                 type="button"
@@ -202,7 +208,9 @@ function WebhookCard({
                 onClick={() => onDelete(webhook.id)}
                 disabled={isBusy}
               >
-                {isDeletingWebhook ? "Deleting…" : "Delete"}
+                {isDeletingWebhook
+                  ? t("boardEdit.webhooksDeleting")
+                  : t("boardEdit.webhooksDelete")}
               </Button>
             </>
           )}
@@ -213,23 +221,27 @@ function WebhookCard({
           <Textarea
             value={draftDescription}
             onChange={(event) => setDraftDescription(event.target.value)}
-            placeholder="Describe exactly what the lead agent should do when payloads arrive."
+            placeholder={t("boardEdit.webhooksInstructionPlaceholder")}
             className="min-h-[90px]"
             disabled={isBusy}
           />
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-900">Agent</label>
+            <label className="text-sm font-medium text-slate-900">
+              {t("boardEdit.webhooksAgentLabel")}
+            </label>
             <Select
               value={draftAgentValue}
               onValueChange={setDraftAgentValue}
               disabled={isBusy}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Lead agent (default fallback)" />
+                <SelectValue
+                  placeholder={t("boardEdit.webhooksAgentPlaceholder")}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={LEAD_AGENT_VALUE}>
-                  Lead agent (default fallback)
+                  {t("boardEdit.webhooksLeadAgentOption")}
                 </SelectItem>
                 {agents.map((agent) => (
                   <SelectItem key={agent.id} value={agent.id}>
@@ -250,7 +262,8 @@ function WebhookCard({
             />
           </div>
           <p className="text-xs text-slate-600">
-            Recipient: {mappedAgent?.name ?? "Lead agent"}
+            {t("boardEdit.webhooksRecipient")}:{" "}
+            {mappedAgent?.name ?? t("boardEdit.webhooksLeadAgentFallback")}
           </p>
         </>
       )}
@@ -265,6 +278,7 @@ function WebhookCard({
 
 export default function EditBoardPage() {
   const { isSignedIn } = useAuth();
+  const t = useT();
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -430,7 +444,7 @@ export default function EditBoardPage() {
         }
       },
       onError: (err) => {
-        setError(err.message || "Something went wrong.");
+        setError(err.message || t("boardEdit.errorGeneric"));
       },
     },
   });
@@ -449,7 +463,9 @@ export default function EditBoardPage() {
           });
         },
         onError: (err) => {
-          setWebhookError(err.message || "Unable to create webhook.");
+          setWebhookError(
+            err.message || t("boardEdit.unableToCreateWebhook"),
+          );
         },
       },
     });
@@ -466,7 +482,9 @@ export default function EditBoardPage() {
           });
         },
         onError: (err) => {
-          setWebhookError(err.message || "Unable to delete webhook.");
+          setWebhookError(
+            err.message || t("boardEdit.unableToDeleteWebhook"),
+          );
         },
       },
     });
@@ -483,7 +501,9 @@ export default function EditBoardPage() {
           });
         },
         onError: (err) => {
-          setWebhookError(err.message || "Unable to update webhook.");
+          setWebhookError(
+            err.message || t("boardEdit.unableToUpdateWebhook"),
+          );
         },
       },
     });
@@ -614,21 +634,21 @@ export default function EditBoardPage() {
     if (!isSignedIn || !boardId) return;
     const trimmedName = resolvedName.trim();
     if (!trimmedName) {
-      setError("Board name is required.");
+      setError(t("boardEdit.formNameRequired"));
       return;
     }
     const resolvedGatewayId = displayGatewayId;
     if (!resolvedGatewayId) {
-      setError("Select a gateway before saving.");
+      setError(t("boardEdit.formGatewayRequired"));
       return;
     }
     const trimmedDescription = resolvedDescription.trim();
     if (!trimmedDescription) {
-      setError("Board description is required.");
+      setError(t("boardEdit.formDescriptionRequired"));
       return;
     }
     if (!Number.isInteger(resolvedMaxAgents) || resolvedMaxAgents < 0) {
-      setError("Max worker agents must be a non-negative integer.");
+      setError(t("boardEdit.formMaxAgentsInvalid"));
       return;
     }
 
@@ -681,7 +701,7 @@ export default function EditBoardPage() {
     if (!boardId) return;
     const trimmedDescription = webhookDescription.trim();
     if (!trimmedDescription) {
-      setWebhookError("Webhook instruction is required.");
+      setWebhookError(t("boardEdit.webhooksInstructionRequired"));
       return;
     }
     setWebhookError(null);
@@ -713,7 +733,7 @@ export default function EditBoardPage() {
     if (updateWebhookMutation.isPending) return false;
     const trimmedDescription = description.trim();
     if (!trimmedDescription) {
-      setWebhookError("Webhook instruction is required.");
+      setWebhookError(t("boardEdit.webhooksInstructionRequired"));
       return false;
     }
     setWebhookError(null);
@@ -743,7 +763,7 @@ export default function EditBoardPage() {
         );
       }, 1500);
     } catch {
-      setWebhookError("Unable to copy webhook endpoint.");
+      setWebhookError(t("boardEdit.webhooksCopyError"));
     }
   };
 
@@ -756,14 +776,14 @@ export default function EditBoardPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to edit boards.",
+          message: t("boardEdit.signInMessage"),
           forceRedirectUrl: `/boards/${boardId}/edit`,
           signUpForceRedirectUrl: `/boards/${boardId}/edit`,
         }}
-        title="Edit board"
-        description="Update board settings and gateway."
+        title={t("boardEdit.title")}
+        description={t("boardEdit.description")}
         isAdmin={isAdmin}
-        adminOnlyMessage="Only organization owners and admins can edit board settings."
+        adminOnlyMessage={t("boardEdit.adminOnly")}
         mainRef={mainRef}
       >
         <div className="space-y-6">
@@ -777,10 +797,10 @@ export default function EditBoardPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-amber-900">
-                    Goal needs confirmation
+                    {t("boardEdit.goalNeedsConfirmationTitle")}
                   </p>
                   <p className="mt-1 text-xs text-amber-800/80">
-                    Start onboarding to draft an objective and success metrics.
+                    {t("boardEdit.goalNeedsConfirmationDesc")}
                   </p>
                 </div>
                 <Button
@@ -789,34 +809,36 @@ export default function EditBoardPage() {
                   onClick={() => setIsOnboardingOpen(true)}
                   disabled={isLoading || !baseBoard}
                 >
-                  Start onboarding
+                  {t("boardEdit.startOnboarding")}
                 </Button>
               </div>
             ) : null}
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-900">
-                  Board name <span className="text-red-500">*</span>
+                  {t("boardEdit.name")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <Input
                   value={resolvedName}
                   onChange={(event) => setName(event.target.value)}
-                  placeholder="Board name"
+                  placeholder={t("boardEdit.namePlaceholder")}
                   disabled={isLoading || !baseBoard}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-900">
-                  Gateway <span className="text-red-500">*</span>
+                  {t("board.gateway")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <SearchableSelect
-                  ariaLabel="Select gateway"
+                  ariaLabel={t("board.selectGatewayAria")}
                   value={displayGatewayId}
                   onValueChange={setGatewayId}
                   options={gatewayOptions}
-                  placeholder="Select gateway"
-                  searchPlaceholder="Search gateways..."
-                  emptyMessage="No gateways found."
+                  placeholder={t("board.selectGateway")}
+                  searchPlaceholder={t("board.searchGateways")}
+                  emptyMessage={t("board.noGatewaysFound")}
                   triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   contentClassName="rounded-xl border border-slate-200 shadow-lg"
                   itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
@@ -827,20 +849,26 @@ export default function EditBoardPage() {
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-900">
-                  Board type
+                  {t("boardEdit.boardType")}
                 </label>
                 <Select value={resolvedBoardType} onValueChange={setBoardType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select board type" />
+                    <SelectValue
+                      placeholder={t("boardEdit.boardTypePlaceholder")}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="goal">Goal</SelectItem>
-                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="goal">
+                      {t("boardEdit.boardTypeGoal")}
+                    </SelectItem>
+                    <SelectItem value="general">
+                      {t("boardEdit.boardTypeGeneral")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="space-y-2 pt-1">
                   <label className="text-sm font-medium text-slate-900">
-                    Max worker agents
+                    {t("boardEdit.maxAgents")}
                   </label>
                   <Input
                     type="number"
@@ -861,30 +889,29 @@ export default function EditBoardPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-900">
-                  Board group
+                  {t("boardEdit.group")}
                 </label>
                 <SearchableSelect
-                  ariaLabel="Select board group"
+                  ariaLabel={t("board.selectBoardGroupAria")}
                   value={resolvedBoardGroupId}
                   onValueChange={setBoardGroupId}
                   options={groupOptions}
-                  placeholder="No group"
-                  searchPlaceholder="Search groups..."
-                  emptyMessage="No groups found."
+                  placeholder={t("boardEdit.noGroup")}
+                  searchPlaceholder={t("board.searchGroups")}
+                  emptyMessage={t("board.noGroupsFound")}
                   triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   contentClassName="rounded-xl border border-slate-200 shadow-lg"
                   itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
                   disabled={isLoading}
                 />
                 <p className="text-xs text-slate-500">
-                  Boards in the same group can share cross-board context for
-                  agents.
+                  {t("boardEdit.boardGroupHelp")}
                 </p>
               </div>
               {resolvedBoardType !== "general" ? (
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-900">
-                    Target date
+                    {t("boardEdit.targetDate")}
                   </label>
                   <Input
                     type="date"
@@ -898,12 +925,13 @@ export default function EditBoardPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-900">
-                Description <span className="text-red-500">*</span>
+                {t("boardEdit.descriptionLabel")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <Textarea
                 value={resolvedDescription}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="What context should the lead agent know?"
+                placeholder={t("boardEdit.descriptionPlaceholder")}
                 className="min-h-[120px]"
                 disabled={isLoading}
               />
@@ -913,12 +941,12 @@ export default function EditBoardPage() {
               <>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-900">
-                    Objective
+                    {t("boardEdit.objective")}
                   </label>
                   <Textarea
                     value={resolvedObjective}
                     onChange={(event) => setObjective(event.target.value)}
-                    placeholder="What should this board achieve?"
+                    placeholder={t("boardEdit.objectivePlaceholder")}
                     className="min-h-[120px]"
                     disabled={isLoading}
                   />
@@ -926,17 +954,17 @@ export default function EditBoardPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-900">
-                    Success metrics (JSON)
+                    {t("boardEdit.successMetricsLabel")}
                   </label>
                   <Textarea
                     value={resolvedSuccessMetrics}
                     onChange={(event) => setSuccessMetrics(event.target.value)}
-                    placeholder='e.g. { "target": "Launch by week 2" }'
+                    placeholder={t("boardEdit.successMetricsPlaceholder")}
                     className="min-h-[140px] font-mono text-xs"
                     disabled={isLoading}
                   />
                   <p className="text-xs text-slate-500">
-                    Add key outcomes so the lead agent can measure progress.
+                    {t("boardEdit.successMetricsHelp")}
                   </p>
                   {metricsError ? (
                     <p className="text-xs text-red-500">{metricsError}</p>
@@ -948,10 +976,10 @@ export default function EditBoardPage() {
             <section className="space-y-3 border-t border-slate-200 pt-4">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">
-                  Rules
+                  {t("boardEdit.rulesTitle")}
                 </h2>
                 <p className="text-xs text-slate-600">
-                  Configure board-level workflow enforcement.
+                  {t("boardEdit.rulesDescription")}
                 </p>
               </div>
               <div className="flex items-start gap-3 rounded-lg border border-slate-200 px-3 py-3">
@@ -959,7 +987,7 @@ export default function EditBoardPage() {
                   type="button"
                   role="switch"
                   aria-checked={resolvedRequireApprovalForDone}
-                  aria-label="Require approval"
+                  aria-label={t("boardEdit.requireApprovalAria")}
                   onClick={() =>
                     setRequireApprovalForDone(!resolvedRequireApprovalForDone)
                   }
@@ -980,12 +1008,11 @@ export default function EditBoardPage() {
                 </button>
                 <span className="space-y-1">
                   <span className="block text-sm font-medium text-slate-900">
-                    Require approval
+                    {t("boardEdit.requireApprovalTitle")}
                   </span>
                   <span className="block text-xs text-slate-600">
-                    Require at least one linked approval in{" "}
-                    <code>approved</code> state before a task can be marked{" "}
-                    <code>done</code>.
+                    {t("boardEdit.requireApprovalDesc")}{" "}
+                    <code>approved</code> <code>done</code>.
                   </span>
                 </span>
               </div>
@@ -994,7 +1021,7 @@ export default function EditBoardPage() {
                   type="button"
                   role="switch"
                   aria-checked={resolvedRequireReviewBeforeDone}
-                  aria-label="Require review before done"
+                  aria-label={t("boardEdit.requireReviewAria")}
                   onClick={() =>
                     setRequireReviewBeforeDone(!resolvedRequireReviewBeforeDone)
                   }
@@ -1015,11 +1042,11 @@ export default function EditBoardPage() {
                 </button>
                 <span className="space-y-1">
                   <span className="block text-sm font-medium text-slate-900">
-                    Require review before done
+                    {t("boardEdit.requireReviewTitle")}
                   </span>
                   <span className="block text-xs text-slate-600">
-                    Tasks must move to <code>review</code> before they can be
-                    marked <code>done</code>.
+                    {t("boardEdit.requireReviewDesc")}{" "}
+                    <code>review</code> <code>done</code>.
                   </span>
                 </span>
               </div>
@@ -1028,7 +1055,7 @@ export default function EditBoardPage() {
                   type="button"
                   role="switch"
                   aria-checked={resolvedCommentRequiredForReview}
-                  aria-label="Require comment for review"
+                  aria-label={t("boardEdit.requireCommentAria")}
                   onClick={() =>
                     setCommentRequiredForReview(
                       !resolvedCommentRequiredForReview,
@@ -1051,11 +1078,10 @@ export default function EditBoardPage() {
                 </button>
                 <span className="space-y-1">
                   <span className="block text-sm font-medium text-slate-900">
-                    Require comment for review
+                    {t("boardEdit.requireCommentTitle")}
                   </span>
                   <span className="block text-xs text-slate-600">
-                    Require a task comment when moving status to{" "}
-                    <code>review</code>.
+                    {t("boardEdit.requireCommentDesc")} <code>review</code>.
                   </span>
                 </span>
               </div>
@@ -1064,7 +1090,7 @@ export default function EditBoardPage() {
                   type="button"
                   role="switch"
                   aria-checked={resolvedBlockStatusChangesWithPendingApproval}
-                  aria-label="Block status changes with pending approval"
+                  aria-label={t("boardEdit.blockWithPendingAria")}
                   onClick={() =>
                     setBlockStatusChangesWithPendingApproval(
                       !resolvedBlockStatusChangesWithPendingApproval,
@@ -1087,11 +1113,10 @@ export default function EditBoardPage() {
                 </button>
                 <span className="space-y-1">
                   <span className="block text-sm font-medium text-slate-900">
-                    Block status changes with pending approval
+                    {t("boardEdit.blockWithPendingTitle")}
                   </span>
                   <span className="block text-xs text-slate-600">
-                    Prevent status transitions while any linked approval is in{" "}
-                    <code>pending</code> state.
+                    {t("boardEdit.blockWithPendingDesc")} <code>pending</code>.
                   </span>
                 </span>
               </div>
@@ -1100,7 +1125,7 @@ export default function EditBoardPage() {
                   type="button"
                   role="switch"
                   aria-checked={resolvedOnlyLeadCanChangeStatus}
-                  aria-label="Only lead can change status"
+                  aria-label={t("boardEdit.onlyLeadCanChangeAria")}
                   onClick={() =>
                     setOnlyLeadCanChangeStatus(!resolvedOnlyLeadCanChangeStatus)
                   }
@@ -1121,10 +1146,10 @@ export default function EditBoardPage() {
                 </button>
                 <span className="space-y-1">
                   <span className="block text-sm font-medium text-slate-900">
-                    Only lead can change status
+                    {t("boardEdit.onlyLeadCanChangeTitle")}
                   </span>
                   <span className="block text-xs text-slate-600">
-                    Restrict status changes to the board lead.
+                    {t("boardEdit.onlyLeadCanChangeDesc")}
                   </span>
                 </span>
               </div>
@@ -1132,9 +1157,7 @@ export default function EditBoardPage() {
 
             {gateways.length === 0 ? (
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <p>
-                  No gateways available. Create one in Gateways to continue.
-                </p>
+                <p>{t("boardEdit.noGateways")}</p>
               </div>
             ) : null}
 
@@ -1149,42 +1172,41 @@ export default function EditBoardPage() {
                 onClick={() => router.push(`/boards/${boardId}`)}
                 disabled={isLoading}
               >
-                Cancel
+                {t("boardEdit.cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading || !baseBoard || !isFormReady}
               >
-                {isLoading ? "Saving…" : "Save changes"}
+                {isLoading ? t("boardEdit.saving") : t("boardEdit.saveChanges")}
               </Button>
             </div>
 
             <section className="space-y-4 border-t border-slate-200 pt-4">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">
-                  Webhooks
+                  {t("boardEdit.webhooksTitle")}
                 </h2>
                 <p className="text-xs text-slate-600">
-                  Add inbound webhook endpoints so the lead agent can react to
-                  external events.
+                  {t("boardEdit.webhooksDescription")}
                 </p>
               </div>
               <div className="space-y-3 rounded-lg border border-slate-200 px-4 py-4">
                 <label className="text-sm font-medium text-slate-900">
-                  Lead agent instruction
+                  {t("boardEdit.webhooksLeadInstruction")}
                 </label>
                 <Textarea
                   value={webhookDescription}
                   onChange={(event) =>
                     setWebhookDescription(event.target.value)
                   }
-                  placeholder="Describe exactly what the lead agent should do when payloads arrive."
+                  placeholder={t("boardEdit.webhooksInstructionPlaceholder")}
                   className="min-h-[90px]"
                   disabled={isLoading || isWebhookBusy}
                 />
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-900">
-                    Agent
+                    {t("boardEdit.webhooksAgentLabel")}
                   </label>
                   <Select
                     value={webhookAgentValue}
@@ -1192,11 +1214,15 @@ export default function EditBoardPage() {
                     disabled={isLoading || isWebhookBusy}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Lead agent (default fallback)" />
+                      <SelectValue
+                        placeholder={t(
+                          "boardEdit.webhooksAgentPlaceholder",
+                        )}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={LEAD_AGENT_VALUE}>
-                        Lead agent (default fallback)
+                        {t("boardEdit.webhooksLeadAgentOption")}
                       </SelectItem>
                       {webhookAgents.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
@@ -1219,8 +1245,8 @@ export default function EditBoardPage() {
                     }
                   >
                     {createWebhookMutation.isPending
-                      ? "Creating webhook…"
-                      : "Create webhook"}
+                      ? t("boardEdit.webhooksCreatingButton")
+                      : t("boardEdit.webhooksCreateButton")}
                   </Button>
                 </div>
               </div>
@@ -1230,12 +1256,14 @@ export default function EditBoardPage() {
               ) : null}
 
               {webhooksQuery.isLoading ? (
-                <p className="text-sm text-slate-500">Loading webhooks…</p>
+                <p className="text-sm text-slate-500">
+                  {t("boardEdit.webhooksLoading")}
+                </p>
               ) : null}
 
               {!webhooksQuery.isLoading && webhooks.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-600">
-                  No webhooks configured yet.
+                  {t("boardEdit.webhooksNone")}
                 </p>
               ) : null}
 
@@ -1267,7 +1295,7 @@ export default function EditBoardPage() {
       </DashboardPageLayout>
       <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
         <DialogContent
-          aria-label="Board onboarding"
+          aria-label={t("boardEdit.onboardingAriaLabel")}
           onPointerDownOutside={(event) => event.preventDefault()}
           onInteractOutside={(event) => event.preventDefault()}
         >
@@ -1276,7 +1304,7 @@ export default function EditBoardPage() {
               <button
                 type="button"
                 className="sticky top-4 z-10 ml-auto rounded-lg border border-slate-200 bg-[color:var(--surface)] p-2 text-slate-500 transition hover:bg-slate-50"
-                aria-label="Close onboarding"
+                aria-label={t("boardEdit.closeOnboardingAriaLabel")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1289,7 +1317,7 @@ export default function EditBoardPage() {
             />
           ) : (
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-              Unable to start onboarding.
+              {t("boardEdit.unableToStartOnboarding")}
             </div>
           )}
         </DialogContent>
