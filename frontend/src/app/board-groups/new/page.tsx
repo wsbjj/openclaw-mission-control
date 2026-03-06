@@ -20,6 +20,7 @@ import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n";
 
 const slugify = (value: string) =>
   value
@@ -29,6 +30,7 @@ const slugify = (value: string) =>
     .replace(/(^-|-$)/g, "") || "group";
 
 export default function NewBoardGroupPage() {
+  const t = useT();
   const router = useRouter();
   const { isSignedIn } = useAuth();
 
@@ -61,7 +63,7 @@ export default function NewBoardGroupPage() {
   const createMutation = useCreateBoardGroupApiV1BoardGroupsPost<ApiError>({
     mutation: {
       onError: (err) => {
-        setError(err.message || "Something went wrong.");
+        setError(err.message || t("common.somethingWentWrong"));
       },
     },
   });
@@ -74,7 +76,7 @@ export default function NewBoardGroupPage() {
     if (!isSignedIn) return;
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("Group name is required.");
+      setError(t("boardGroup.nameRequired"));
       return;
     }
 
@@ -88,7 +90,7 @@ export default function NewBoardGroupPage() {
         },
       });
       if (created.status !== 200) {
-        throw new Error("Unable to create group.");
+        throw new Error(t("common.somethingWentWrong"));
       }
 
       const groupId = created.data.id;
@@ -118,18 +120,18 @@ export default function NewBoardGroupPage() {
 
       router.push(`/board-groups/${groupId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : t("common.somethingWentWrong"));
     }
   };
 
   return (
     <DashboardPageLayout
       signedOut={{
-        message: "Sign in to create a board group.",
+        message: t("boardGroup.signInToCreate"),
         forceRedirectUrl: "/board-groups/new",
       }}
-      title="Create board group"
-      description="Groups help agents discover related work across boards."
+      title={t("boardGroup.createGroup")}
+      description={t("boardGroup.createDescription")}
     >
       <form
         onSubmit={handleSubmit}
@@ -138,12 +140,12 @@ export default function NewBoardGroupPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-900">
-              Group name <span className="text-red-500">*</span>
+              {t("boardGroup.groupName")} <span className="text-red-500">*</span>
             </label>
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. Release hardening"
+              placeholder={t("boardGroup.groupNamePlaceholder")}
               disabled={isCreating}
             />
           </div>
@@ -151,12 +153,12 @@ export default function NewBoardGroupPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-900">
-            Description
+            {t("common.description")}
           </label>
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="What ties these boards together? What should agents coordinate on?"
+            placeholder={t("boardGroup.descriptionPlaceholder")}
             className="min-h-[120px]"
             disabled={isCreating}
           />
@@ -164,21 +166,21 @@ export default function NewBoardGroupPage() {
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <label className="text-sm font-medium text-slate-900">Boards</label>
+            <label className="text-sm font-medium text-slate-900">{t("boardGroup.boards")}</label>
             <span className="text-xs text-slate-500">
-              {selectedBoardIds.size} selected
+              {selectedBoardIds.size} {t("common.selected")}
             </span>
           </div>
           <Input
             value={boardSearch}
             onChange={(event) => setBoardSearch(event.target.value)}
-            placeholder="Search boards..."
+            placeholder={t("boardGroup.searchBoards")}
             disabled={isCreating}
           />
           <div className="max-h-64 overflow-auto rounded-xl border border-slate-200 bg-slate-50/40">
             {boardsQuery.isLoading ? (
               <div className="px-4 py-6 text-sm text-slate-500">
-                Loading boards…
+                {t("boardGroup.loadingBoards")}
               </div>
             ) : boardsQuery.error ? (
               <div className="px-4 py-6 text-sm text-rose-700">
@@ -186,7 +188,7 @@ export default function NewBoardGroupPage() {
               </div>
             ) : boards.length === 0 ? (
               <div className="px-4 py-6 text-sm text-slate-500">
-                No boards found.
+                {t("boardGroup.noBoardsFound")}
               </div>
             ) : (
               <ul className="divide-y divide-slate-200">
@@ -232,7 +234,7 @@ export default function NewBoardGroupPage() {
                               </span>
                               {isAlreadyGrouped ? (
                                 <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-900">
-                                  currently grouped
+                                  {t("boardGroup.currentlyGrouped")}
                                 </span>
                               ) : null}
                             </div>
@@ -245,9 +247,7 @@ export default function NewBoardGroupPage() {
             )}
           </div>
           <p className="text-xs text-slate-500">
-            Optional. Selected boards will be assigned to this group after
-            creation. You can change membership later in group edit or board
-            settings.
+            {t("boardGroup.boardsHint")}
           </p>
         </div>
 
@@ -260,22 +260,22 @@ export default function NewBoardGroupPage() {
             onClick={() => router.push("/board-groups")}
             disabled={isCreating}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={isCreating || !isFormReady}>
-            {isCreating ? "Creating…" : "Create group"}
+            {isCreating ? t("boardGroup.creating") : t("boardGroup.createGroup")}
           </Button>
         </div>
 
         <div className="border-t border-slate-100 pt-4 text-xs text-slate-500">
-          Want to assign boards later? Update each board in{" "}
+          {t("boardGroup.wantToAssignLater")}{" "}
           <Link
             href="/boards"
             className="font-medium text-blue-600 hover:text-blue-700"
           >
-            Boards
+            {t("sidebarNav.boards")}
           </Link>{" "}
-          and pick this group.
+          {t("boardGroup.andPickGroup")}
         </div>
       </form>
     </DashboardPageLayout>

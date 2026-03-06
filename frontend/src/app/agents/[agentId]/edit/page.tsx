@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DEFAULT_IDENTITY_PROFILE } from "@/lib/agent-templates";
+import { useT } from "@/lib/i18n";
 
 type IdentityProfile = {
   role: string;
@@ -92,6 +93,7 @@ const withIdentityDefaults = (
 });
 
 export default function EditAgentPage() {
+  const t = useT();
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -141,7 +143,7 @@ export default function EditAgentPage() {
         }
       },
       onError: (err) => {
-        setError(err.message || "Something went wrong.");
+        setError(err.message || t("common.somethingWentWrong"));
       },
     },
   });
@@ -202,11 +204,11 @@ export default function EditAgentPage() {
     if (!isSignedIn || !agentId || !loadedAgent) return;
     const trimmed = resolvedName.trim();
     if (!trimmed) {
-      setError("Agent name is required.");
+      setError(t("agent.nameRequired"));
       return;
     }
     if (!resolvedIsGatewayMain && !resolvedBoardId) {
-      setError("Select a board or mark this agent as the gateway main.");
+      setError(t("agent.selectBoardOrGateway"));
       return;
     }
     if (
@@ -215,16 +217,14 @@ export default function EditAgentPage() {
       !loadedAgent.is_gateway_main &&
       !loadedAgent.board_id
     ) {
-      setError(
-        "Select a board once so we can resolve the gateway main session key.",
-      );
+      setError(t("agent.selectBoardForGateway"));
       return;
     }
     setError(null);
 
     const existingHeartbeat =
       loadedAgent.heartbeat_config &&
-      typeof loadedAgent.heartbeat_config === "object"
+        typeof loadedAgent.heartbeat_config === "object"
         ? (loadedAgent.heartbeat_config as Record<string, unknown>)
         : {};
 
@@ -259,14 +259,14 @@ export default function EditAgentPage() {
   return (
     <DashboardPageLayout
       signedOut={{
-        message: "Sign in to edit agents.",
+        message: t("agent.signInToEdit"),
         forceRedirectUrl: `/agents/${agentId}/edit`,
         signUpForceRedirectUrl: `/agents/${agentId}/edit`,
       }}
       title={
-        resolvedName.trim() ? resolvedName : (loadedAgent?.name ?? "Edit agent")
+        resolvedName.trim() ? resolvedName : (loadedAgent?.name ?? t("agent.editAgent"))
       }
-      description="Status is controlled by agent heartbeat."
+      description={t("agent.editDescription")}
     >
       <form
         onSubmit={handleSubmit}
@@ -274,13 +274,13 @@ export default function EditAgentPage() {
       >
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Basic configuration
+            {t("agent.basicConfig")}
           </p>
           <div className="mt-4 space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-900">
-                  Agent name <span className="text-red-500">*</span>
+                  {t("agent.agentName")} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   value={resolvedName}
@@ -291,7 +291,7 @@ export default function EditAgentPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-900">
-                  Role
+                  {t("agent.role")}
                 </label>
                 <Input
                   value={resolvedIdentityProfile.role}
@@ -310,10 +310,10 @@ export default function EditAgentPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-slate-900">
-                    Board
+                    {t("agent.board")}
                     {resolvedIsGatewayMain ? (
                       <span className="ml-2 text-xs font-normal text-slate-500">
-                        optional
+                        {t("agent.optional")}
                       </span>
                     ) : (
                       <span className="text-red-500"> *</span>
@@ -328,22 +328,22 @@ export default function EditAgentPage() {
                       }}
                       disabled={isLoading}
                     >
-                      Clear board
+                      {t("agent.clearBoard")}
                     </button>
                   ) : null}
                 </div>
                 <SearchableSelect
-                  ariaLabel="Select board"
+                  ariaLabel={t("agent.selectBoard")}
                   value={resolvedBoardId}
                   onValueChange={(value) => setBoardId(value)}
                   options={getBoardOptions(boards)}
                   placeholder={
                     resolvedIsGatewayMain
-                      ? "No board (main agent)"
-                      : "Select board"
+                      ? t("agent.noBoardMain")
+                      : t("agent.selectBoard")
                   }
-                  searchPlaceholder="Search boards..."
-                  emptyMessage="No matching boards."
+                  searchPlaceholder={t("agent.searchBoards")}
+                  emptyMessage={t("agent.noMatchingBoards")}
                   triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   contentClassName="rounded-xl border border-slate-200 shadow-lg"
                   itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
@@ -351,19 +351,17 @@ export default function EditAgentPage() {
                 />
                 {resolvedIsGatewayMain ? (
                   <p className="text-xs text-slate-500">
-                    Main agents are not attached to a board. If a board is
-                    selected, it is only used to resolve the gateway main
-                    session key and will be cleared on save.
+                    {t("agent.gatewayMainNote")}
                   </p>
                 ) : boards.length === 0 ? (
                   <p className="text-xs text-slate-500">
-                    Create a board before assigning agents.
+                    {t("agent.createBoardFirst")}
                   </p>
                 ) : null}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-900">
-                  Emoji
+                  {t("agent.emoji")}
                 </label>
                 <Select
                   value={resolvedIdentityProfile.emoji}
@@ -376,7 +374,7 @@ export default function EditAgentPage() {
                   disabled={isLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select emoji" />
+                    <SelectValue placeholder={t("agent.selectEmoji")} />
                   </SelectTrigger>
                   <SelectContent>
                     {EMOJI_OPTIONS.map((option) => (
@@ -400,11 +398,10 @@ export default function EditAgentPage() {
               />
               <span>
                 <span className="block font-medium text-slate-900">
-                  Gateway main agent
+                  {t("agent.gatewayMainAgent")}
                 </span>
                 <span className="block text-xs text-slate-500">
-                  Uses the gateway main session key and is not tied to a single
-                  board.
+                  {t("agent.gatewayMainDesc")}
                 </span>
               </span>
             </label>
@@ -413,12 +410,12 @@ export default function EditAgentPage() {
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Personality & behavior
+            {t("agent.personalityBehavior")}
           </p>
           <div className="mt-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-900">
-                Communication style
+                {t("agent.communicationStyle")}
               </label>
               <Input
                 value={resolvedIdentityProfile.communication_style}
@@ -436,12 +433,12 @@ export default function EditAgentPage() {
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Schedule & notifications
+            {t("agent.scheduleNotifications")}
           </p>
           <div className="mt-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-900">
-                Interval
+                {t("agent.interval")}
               </label>
               <Input
                 value={resolvedHeartbeatEvery}
@@ -450,7 +447,7 @@ export default function EditAgentPage() {
                 disabled={isLoading}
               />
               <p className="text-xs text-slate-500">
-                Set how often this agent runs HEARTBEAT.md.
+                {t("agent.intervalNote")}
               </p>
             </div>
           </div>
@@ -464,14 +461,14 @@ export default function EditAgentPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving…" : "Save changes"}
+            {isLoading ? t("common.saving") : t("common.saveChanges")}
           </Button>
           <Button
             variant="outline"
             type="button"
             onClick={() => router.push(`/agents/${agentId}`)}
           >
-            Back to agent
+            {t("agent.backToAgent")}
           </Button>
         </div>
       </form>

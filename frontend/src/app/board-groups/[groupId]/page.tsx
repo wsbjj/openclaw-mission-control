@@ -48,17 +48,18 @@ import { apiDatetimeToMs } from "@/lib/datetime";
 import { formatTimestamp } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { usePageActive } from "@/hooks/usePageActive";
+import { useT } from "@/lib/i18n";
 
-const statusLabel = (value?: string | null) => {
+const statusLabel = (value?: string | null, t?: (key: string) => string) => {
   switch (value) {
     case "inbox":
-      return "Inbox";
+      return t ? t("boardGroup.inbox") : "Inbox";
     case "in_progress":
-      return "In progress";
+      return t ? t("boardGroup.inProgress") : "In progress";
     case "review":
-      return "Review";
+      return t ? t("boardGroup.review") : "Review";
     case "done":
-      return "Done";
+      return t ? t("dashboard.done") : "Done";
     default:
       return value || "—";
   }
@@ -148,17 +149,18 @@ const HEARTBEAT_PRESETS: Array<{
   amount: number;
   unit: HeartbeatUnit;
 }> = [
-  { label: "30s", amount: 30, unit: "s" },
-  { label: "1m", amount: 1, unit: "m" },
-  { label: "2m", amount: 2, unit: "m" },
-  { label: "5m", amount: 5, unit: "m" },
-  { label: "10m", amount: 10, unit: "m" },
-  { label: "15m", amount: 15, unit: "m" },
-  { label: "30m", amount: 30, unit: "m" },
-  { label: "1h", amount: 1, unit: "h" },
-];
+    { label: "30s", amount: 30, unit: "s" },
+    { label: "1m", amount: 1, unit: "m" },
+    { label: "2m", amount: 2, unit: "m" },
+    { label: "5m", amount: 5, unit: "m" },
+    { label: "10m", amount: 10, unit: "m" },
+    { label: "15m", amount: 15, unit: "m" },
+    { label: "30m", amount: 30, unit: "m" },
+    { label: "1h", amount: 1, unit: "h" },
+  ];
 
 export default function BoardGroupDetailPage() {
+  const t = useT();
   const { isSignedIn } = useAuth();
   const params = useParams();
   const groupIdParam = params?.groupId;
@@ -606,11 +608,11 @@ export default function BoardGroupDetailPage() {
   const sendGroupChat = useCallback(
     async (content: string): Promise<boolean> => {
       if (!isSignedIn || !groupId) {
-        setChatError("Sign in to send messages.");
+        setChatError(t("boardGroup.signInToPost"));
         return false;
       }
       if (!canWriteGroup) {
-        setChatError("Read-only access. You cannot post group messages.");
+        setChatError(t("boardGroup.readOnlyChat"));
         return false;
       }
       const trimmed = content.trim();
@@ -650,11 +652,11 @@ export default function BoardGroupDetailPage() {
   const sendGroupNote = useCallback(
     async (content: string): Promise<boolean> => {
       if (!isSignedIn || !groupId) {
-        setNoteSendError("Sign in to post.");
+        setNoteSendError(t("boardGroup.signInToPost"));
         return false;
       }
       if (!canWriteGroup) {
-        setNoteSendError("Read-only access. You cannot post notes.");
+        setNoteSendError(t("boardGroup.readOnlyNotes"));
         return false;
       }
       const trimmed = content.trim();
@@ -693,16 +695,16 @@ export default function BoardGroupDetailPage() {
 
   const applyHeartbeat = useCallback(async () => {
     if (!isSignedIn || !groupId) {
-      setHeartbeatApplyError("Sign in to apply.");
+      setHeartbeatApplyError(t("boardGroup.signInToPost"));
       return;
     }
     if (!canManageHeartbeat) {
-      setHeartbeatApplyError("Read-only access. You cannot change agent pace.");
+      setHeartbeatApplyError(t("boardGroup.readOnlyApply"));
       return;
     }
     const trimmed = heartbeatEvery.trim();
     if (!trimmed) {
-      setHeartbeatApplyError("Heartbeat cadence is required.");
+      setHeartbeatApplyError(t("boardGroup.heartbeatRequired"));
       return;
     }
     setIsHeartbeatApplying(true);
@@ -736,7 +738,7 @@ export default function BoardGroupDetailPage() {
     <DashboardShell>
       <SignedOut>
         <SignedOutPanel
-          message="Sign in to view board groups."
+          message={t("boardGroup.signInToView")}
           forceRedirectUrl={`/board-groups/${groupId ?? ""}`}
         />
       </SignedOut>
@@ -748,10 +750,10 @@ export default function BoardGroupDetailPage() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Board group
+                    {t("boardGroup.boardGroup")}
                   </p>
                   <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
-                    {group?.name ?? "Group"}
+                    {group?.name ?? t("boardGroup.group")}
                   </h1>
                   {group?.description ? (
                     <p className="mt-2 max-w-2xl text-sm text-slate-600">
@@ -759,7 +761,7 @@ export default function BoardGroupDetailPage() {
                     </p>
                   ) : (
                     <p className="mt-2 text-sm text-slate-400">
-                      No description
+                      {t("boardGroup.noDescription")}
                     </p>
                   )}
                 </div>
@@ -774,7 +776,7 @@ export default function BoardGroupDetailPage() {
                       title="Edit group"
                     >
                       <Settings className="mr-2 h-4 w-4" />
-                      Edit
+                      {t("boardGroup.edit")}
                     </Link>
                   ) : null}
                   <Button
@@ -790,7 +792,7 @@ export default function BoardGroupDetailPage() {
                     title="Group chat"
                   >
                     <MessageSquare className="mr-2 h-4 w-4" />
-                    Chat
+                    {t("boardGroup.chat")}
                   </Button>
                   <Button
                     variant="outline"
@@ -805,13 +807,13 @@ export default function BoardGroupDetailPage() {
                     title="Group notes"
                   >
                     <NotebookText className="mr-2 h-4 w-4" />
-                    Notes
+                    {t("boardGroup.notes")}
                   </Button>
                   <Link
                     href="/boards"
                     className={buttonVariants({ variant: "ghost", size: "sm" })}
                   >
-                    View boards
+                    {t("boardGroup.viewBoards")}
                   </Link>
                 </div>
               </div>
@@ -824,10 +826,10 @@ export default function BoardGroupDetailPage() {
                     checked={includeDone}
                     onChange={(event) => setIncludeDone(event.target.checked)}
                   />
-                  Include done
+                  {t("boardGroup.includeDone")}
                 </label>
                 <div className="flex items-center gap-2 text-sm text-slate-700">
-                  <span className="text-slate-500">Top tasks per board</span>
+                  <span className="text-slate-500">{t("boardGroup.topTasksPerBoard")}</span>
                   <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
                     {[0, 3, 5, 10].map((value) => (
                       <button
@@ -848,7 +850,7 @@ export default function BoardGroupDetailPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-                  <span className="text-slate-500">Agent pace</span>
+                  <span className="text-slate-500">{t("boardGroup.agentPace")}</span>
                   <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
                     {HEARTBEAT_PRESETS.map((preset) => {
                       const value = `${preset.amount}${preset.unit}`;
@@ -862,7 +864,7 @@ export default function BoardGroupDetailPage() {
                               ? "bg-slate-900 text-white"
                               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                             !canManageHeartbeat &&
-                              "opacity-50 cursor-not-allowed",
+                            "opacity-50 cursor-not-allowed",
                           )}
                           disabled={!canManageHeartbeat}
                           onClick={() => {
@@ -918,7 +920,7 @@ export default function BoardGroupDetailPage() {
                       }
                       disabled={!canManageHeartbeat}
                     />
-                    Include leads
+                    {t("boardGroup.includeLeads")}
                   </label>
                   <Button
                     size="sm"
@@ -931,17 +933,16 @@ export default function BoardGroupDetailPage() {
                     }
                     title={
                       canManageHeartbeat
-                        ? "Apply heartbeat"
-                        : "Read-only access"
+                        ? t("boardGroup.applyHeartbeat")
+                        : t("boardGroup.readOnly")
                     }
                   >
-                    {isHeartbeatApplying ? "Applying…" : "Apply"}
+                    {isHeartbeatApplying ? t("boardGroup.applying") : t("boardGroup.apply")}
                   </Button>
                 </div>
                 {!canManageHeartbeat ? (
                   <p className="text-xs text-slate-500">
-                    Read-only access. You cannot change agent pace for this
-                    group.
+                    {t("boardGroup.readOnlyPace")}
                   </p>
                 ) : null}
               </div>
@@ -958,19 +959,20 @@ export default function BoardGroupDetailPage() {
               {heartbeatApplyResult ? (
                 <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
                   <p className="font-semibold text-slate-900">
-                    Heartbeat applied
+                    {t("boardGroup.heartbeatApplied")}
                   </p>
                   <p className="mt-1 text-slate-600">
-                    Updated {heartbeatApplyResult.updated_agent_ids.length}{" "}
-                    agents, failed{" "}
-                    {heartbeatApplyResult.failed_agent_ids.length}.
+                    {t("boardGroup.heartbeatResult", {
+                      updated: heartbeatApplyResult.updated_agent_ids.length,
+                      failed: heartbeatApplyResult.failed_agent_ids.length,
+                    })}
                   </p>
                 </div>
               ) : null}
 
               {snapshotQuery.isLoading ? (
                 <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-                  Loading group snapshot…
+                  {t("boardGroup.loadingSnapshot")}
                 </div>
               ) : snapshotQuery.error ? (
                 <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 shadow-sm">
@@ -978,8 +980,7 @@ export default function BoardGroupDetailPage() {
                 </div>
               ) : boards.length === 0 ? (
                 <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-                  No boards in this group yet. Assign boards from the board
-                  settings page.
+                  {t("boardGroup.noBoardsInGroup")}
                 </div>
               ) : (
                 <div className="grid gap-6 lg:grid-cols-2">
@@ -1002,18 +1003,18 @@ export default function BoardGroupDetailPage() {
                               <ArrowUpRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600" />
                             </Link>
                             <p className="mt-1 text-xs text-slate-500">
-                              Updated {formatTimestamp(item.board.updated_at)}
+                              {t("boardGroup.updatedAt", { time: formatTimestamp(item.board.updated_at) })}
                             </p>
                           </div>
                           <div className="flex flex-wrap items-center justify-end gap-2 text-xs">
                             <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-slate-700">
-                              Inbox {safeCount(item, "inbox")}
+                              {t("boardGroup.inbox")} {safeCount(item, "inbox")}
                             </span>
                             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-emerald-800">
-                              In progress {safeCount(item, "in_progress")}
+                              {t("boardGroup.inProgress")} {safeCount(item, "in_progress")}
                             </span>
                             <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-900">
-                              Review {safeCount(item, "review")}
+                              {t("boardGroup.review")} {safeCount(item, "review")}
                             </span>
                           </div>
                         </div>
@@ -1040,7 +1041,7 @@ export default function BoardGroupDetailPage() {
                                           statusTone(task.status),
                                         )}
                                       >
-                                        {statusLabel(task.status)}
+                                        {statusLabel(task.status, t)}
                                       </span>
                                       <span
                                         className={cn(
@@ -1060,9 +1061,9 @@ export default function BoardGroupDetailPage() {
                                   </div>
                                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
                                     <p className="truncate">
-                                      Assignee:{" "}
+                                      {t("boardGroup.assignee")}{" "}
                                       <span className="font-medium text-slate-900">
-                                        {task.assignee ?? "Unassigned"}
+                                        {task.assignee ?? t("boardGroup.unassigned")}
                                       </span>
                                     </p>
                                     <p className="font-mono text-[11px] text-slate-400">
@@ -1075,7 +1076,7 @@ export default function BoardGroupDetailPage() {
                           </ul>
                         ) : (
                           <p className="text-sm text-slate-500">
-                            No tasks in this snapshot.
+                            {t("boardGroup.noTasksSnapshot")}
                           </p>
                         )}
                       </div>
@@ -1136,12 +1137,12 @@ export default function BoardGroupDetailPage() {
                   onChange={(event) => setChatBroadcast(event.target.checked)}
                   disabled={!canWriteGroup}
                 />
-                Broadcast
+                {t("boardGroup.broadcast")}
               </label>
               <p className="text-xs text-slate-500">
                 {chatBroadcast
-                  ? "Notifies every agent in the group."
-                  : "Notifies leads + mentions."}
+                  ? t("boardGroup.broadcastOn")
+                  : t("boardGroup.broadcastOff")}
               </p>
             </div>
 
@@ -1174,8 +1175,8 @@ export default function BoardGroupDetailPage() {
             <BoardChatComposer
               placeholder={
                 canWriteGroup
-                  ? "Message the whole group. Tag @lead, @name, or @all."
-                  : "Read-only access. Group chat is disabled."
+                  ? t("boardGroup.chatPlaceholder")
+                  : t("boardGroup.chatReadOnly")
               }
               isSending={isChatSending}
               onSend={sendGroupChat}
@@ -1223,12 +1224,12 @@ export default function BoardGroupDetailPage() {
                   onChange={(event) => setNotesBroadcast(event.target.checked)}
                   disabled={!canWriteGroup}
                 />
-                Broadcast
+                {t("boardGroup.broadcast")}
               </label>
               <p className="text-xs text-slate-500">
                 {notesBroadcast
-                  ? "Notifies every agent in the group."
-                  : "Notifies leads + mentions."}
+                  ? t("boardGroup.broadcastOn")
+                  : t("boardGroup.broadcastOff")}
               </p>
             </div>
 
@@ -1261,8 +1262,8 @@ export default function BoardGroupDetailPage() {
             <BoardChatComposer
               placeholder={
                 canWriteGroup
-                  ? "Post a shared note for all linked boards. Tag @lead, @name, or @all."
-                  : "Read-only access. Notes are disabled."
+                  ? t("boardGroup.notesPlaceholder")
+                  : t("boardGroup.notesReadOnly")
               }
               isSending={isNoteSending}
               onSend={sendGroupNote}

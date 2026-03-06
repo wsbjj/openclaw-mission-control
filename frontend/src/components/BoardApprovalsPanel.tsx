@@ -26,6 +26,7 @@ import {
 } from "@/components/charts/chart";
 import { Button } from "@/components/ui/button";
 import { apiDatetimeToMs, parseApiDatetime } from "@/lib/datetime";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Approval = ApprovalRead & { status: string };
@@ -352,7 +353,11 @@ const taskHref = (boardId: string, taskId: string) =>
  * Used by the approvals panel modal: it prefers explicit fields but falls back
  * to payload-derived values so older approvals still render well.
  */
-const approvalSummary = (approval: Approval, boardLabel?: string | null) => {
+const approvalSummary = (
+  approval: Approval,
+  boardLabel: string | null | undefined,
+  t: (key: string) => string,
+) => {
   const payload = approval.payload ?? {};
   const taskIds = approvalTaskIds(approval);
   const taskId = taskIds[0] ?? null;
@@ -374,19 +379,20 @@ const approvalSummary = (approval: Approval, boardLabel?: string | null) => {
     payloadFirstLinkedTaskValue(payload, "description");
   const role = payloadValue(payload, "role");
   const isAssign = approval.action_type.includes("assign");
-  const rows: Array<{ label: string; value: string }> = [];
-  if (boardLabel) rows.push({ label: "Board", value: boardLabel });
-  if (taskIds.length === 1) rows.push({ label: "Task", value: taskIds[0] });
+  const rows: Array<{ key: string; label: string; value: string }> = [];
+  if (boardLabel) rows.push({ key: "board", label: t("approvals.board"), value: boardLabel });
+  if (taskIds.length === 1) rows.push({ key: "task", label: t("approvals.task"), value: taskIds[0] });
   if (taskIds.length > 1)
-    rows.push({ label: "Tasks", value: taskIds.join(", ") });
+    rows.push({ key: "tasks", label: t("approvals.tasks"), value: taskIds.join(", ") });
   if (isAssign) {
     rows.push({
-      label: "Assignee",
-      value: assignedAgentId ?? "Unassigned",
+      key: "assignee",
+      label: t("approvals.assignee"),
+      value: assignedAgentId ?? t("approvals.unassigned"),
     });
   }
-  if (title) rows.push({ label: "Title", value: title });
-  if (role) rows.push({ label: "Role", value: role });
+  if (title) rows.push({ key: "title", label: t("approvals.title"), value: title });
+  if (role) rows.push({ key: "role", label: t("approvals.role"), value: role });
   return { taskId, reason, rows, description };
 };
 
@@ -401,6 +407,7 @@ export function BoardApprovalsPanel({
 }: BoardApprovalsPanelProps) {
   const { isSignedIn } = useAuth();
   const queryClient = useQueryClient();
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -486,7 +493,7 @@ export function BoardApprovalsPanel({
             );
           },
           onError: (err) => {
-            setError(err.message || "Unable to update approval.");
+            setError(err.message || t("approvals.updateError"));
           },
           onSettled: () => {
             setUpdatingId(null);
@@ -554,7 +561,7 @@ export function BoardApprovalsPanel({
         </div>
       ) : null}
       {loadingState ? (
-        <p className="text-sm text-slate-500">Loading approvals…</p>
+        <p className="text-sm text-slate-500">{t("approvals.loadingApprovals")}</p>
       ) : pendingCount === 0 && resolvedCount === 0 ? (
         <div
           className={cn(
@@ -567,11 +574,10 @@ export function BoardApprovalsPanel({
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <p className="mt-4 text-sm font-semibold text-slate-900">
-              All clear
+              {t("approvals.allClear")}
             </p>
             <p className="mt-2 text-sm text-slate-500">
-              No approvals to review right now. New approvals will show up here
-              as soon as they arrive.
+              {t("approvals.noApprovals")}
             </p>
           </div>
         </div>
@@ -590,10 +596,10 @@ export function BoardApprovalsPanel({
           >
             <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Unapproved tasks
+                {t("approvals.unapprovedTasks")}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                {pendingCount} pending · {resolvedCount} resolved
+                {t("approvals.pendingResolved", { pending: pendingCount, resolved: resolvedCount })}
               </p>
             </div>
             <div
@@ -606,21 +612,22 @@ export function BoardApprovalsPanel({
                 const summary = approvalSummary(
                   approval,
                   boardLabelById?.[approval.board_id] ?? null,
+                  t,
                 );
                 const isSelected = effectiveSelectedId === approval.id;
                 const isPending = approval.status === "pending";
                 const titleRow = summary.rows.find(
-                  (row) => row.label.toLowerCase() === "title",
+                  (row) => row.key === "title",
                 );
                 const fallbackRow = summary.rows.find(
                   (row) =>
-                    row.label.toLowerCase() !== "title" &&
-                    row.label.toLowerCase() !== "board",
+                    row.key !== "title" &&
+                    row.key !== "board",
                 );
                 const primaryLabel =
-                  titleRow?.value ?? fallbackRow?.value ?? "Untitled";
+                  titleRow?.value ?? fallbackRow?.value ?? t("approvals.untitled");
                 const boardRow = summary.rows.find(
-                  (row) => row.label.toLowerCase() === "board",
+                  (row) => row.key === "board",
                 );
                 const boardText =
                   boardRow && boardRow.value !== primaryLabel
@@ -655,12 +662,12 @@ export function BoardApprovalsPanel({
                     </p>
                     {boardText ? (
                       <p className="mt-1 text-xs text-slate-500">
-                        Board · {boardText}
+                        {t("approvals.board")} · {boardText}
                       </p>
                     ) : null}
                     <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-700">
-                        {approval.confidence}% score
+                        {t("approvals.score", { value: approval.confidence })}
                       </span>
                       <Clock className="h-3.5 w-3.5 opacity-60" />
                       <span>{formatTimestamp(approval.created_at)}</span>
@@ -680,33 +687,33 @@ export function BoardApprovalsPanel({
             <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 {selectedApproval?.status === "pending"
-                  ? "Latest unapproved task"
-                  : "Approval detail"}
+                  ? t("approvals.latestUnapproved")
+                  : t("approvals.approvalDetail")}
               </p>
             </div>
             {!selectedApproval ? (
               <div className="flex h-full items-center justify-center px-6 py-10 text-sm text-slate-500">
-                Select an approval to review details.
+                {t("approvals.selectToReview")}
               </div>
             ) : (
               (() => {
                 const summary = approvalSummary(
                   selectedApproval,
                   boardLabelById?.[selectedApproval.board_id] ?? null,
+                  t,
                 );
                 const titleRow = summary.rows.find(
-                  (row) => row.label.toLowerCase() === "title",
+                  (row) => row.key === "title",
                 );
                 const titleText = titleRow?.value?.trim() ?? "";
                 const descriptionText = summary.description?.trim() ?? "";
                 const reasoningText = summary.reason?.trim() ?? "";
                 const relatedTasks = approvalRelatedTasks(selectedApproval);
                 const extraRows = summary.rows.filter((row) => {
-                  const normalized = row.label.toLowerCase();
-                  if (normalized === "title") return false;
-                  if (normalized === "task") return false;
-                  if (normalized === "tasks") return false;
-                  if (normalized === "assignee") return false;
+                  if (row.key === "title") return false;
+                  if (row.key === "task") return false;
+                  if (row.key === "tasks") return false;
+                  if (row.key === "assignee") return false;
                   return true;
                 });
                 const rubricScoreSource =
@@ -759,7 +766,7 @@ export function BoardApprovalsPanel({
                           {humanizeAction(selectedApproval.action_type)}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          Requested{" "}
+                          {t("approvals.requested")}{" "}
                           {formatTimestamp(selectedApproval.created_at)}
                         </p>
                       </div>
@@ -770,7 +777,7 @@ export function BoardApprovalsPanel({
                             confidenceBadgeClass(selectedApproval.confidence),
                           )}
                         >
-                          {selectedApproval.confidence}% confidence
+                          {t("approvals.confidence", { value: selectedApproval.confidence })}
                         </span>
                         {selectedApproval.status === "pending" ? (
                           <div className="flex flex-wrap gap-2">
@@ -783,7 +790,7 @@ export function BoardApprovalsPanel({
                               disabled={updatingId === selectedApproval.id}
                               className="bg-slate-900 text-white hover:bg-slate-800"
                             >
-                              Approve
+                              {t("approvals.approve")}
                             </Button>
                             <Button
                               variant="outline"
@@ -794,7 +801,7 @@ export function BoardApprovalsPanel({
                               disabled={updatingId === selectedApproval.id}
                               className="border-slate-300 text-slate-700 hover:bg-slate-100"
                             >
-                              Reject
+                              {t("approvals.reject")}
                             </Button>
                           </div>
                         ) : null}
@@ -809,13 +816,10 @@ export function BoardApprovalsPanel({
                       />
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                          Status
+                          {t("common.status")}
                         </p>
                         <p className="text-sm font-medium text-slate-700">
-                          {formatStatusLabel(selectedApproval.status)} ·{" "}
-                          {selectedApproval.status === "pending"
-                            ? "Awaiting your decision"
-                            : "Decision complete"}
+                          {formatStatusLabel(selectedApproval.status)}
                         </p>
                       </div>
                     </div>
@@ -823,7 +827,7 @@ export function BoardApprovalsPanel({
                     {titleText ? (
                       <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                          Title
+                          {t("approvals.title")}
                         </p>
                         <div className="text-sm font-medium text-slate-900">
                           {titleText}
@@ -834,7 +838,7 @@ export function BoardApprovalsPanel({
                     {descriptionText ? (
                       <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                          Description
+                          {t("approvals.description")}
                         </p>
                         <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                           {descriptionText}
@@ -845,7 +849,7 @@ export function BoardApprovalsPanel({
                     {reasoningText ? (
                       <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                          Lead reasoning
+                          {t("approvals.decisionReasoning")}
                         </p>
                         <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
                           <p>{reasoningText}</p>
@@ -856,7 +860,7 @@ export function BoardApprovalsPanel({
                     {relatedTasks.length > 0 ? (
                       <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                          Related tasks
+                          {t("approvals.linkedTasks")}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {relatedTasks.map((task) => (
@@ -878,7 +882,7 @@ export function BoardApprovalsPanel({
                     {extraRows.length > 0 ? (
                       <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                          Details
+                          {t("approvals.taskDetails")}
                         </p>
                         <div className="grid gap-3 sm:grid-cols-2">
                           {extraRows.map((row) => (
@@ -901,7 +905,7 @@ export function BoardApprovalsPanel({
                     {hasRubric ? (
                       <div className="space-y-4">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                          Rubric scores
+                          {t("approvals.rubricBreakdown")}
                         </p>
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                           <div className="w-full space-y-2 sm:max-w-[220px]">

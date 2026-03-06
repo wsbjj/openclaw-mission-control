@@ -27,6 +27,7 @@ import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n";
 
 const slugify = (value: string) =>
   value
@@ -36,6 +37,7 @@ const slugify = (value: string) =>
     .replace(/(^-|-$)/g, "") || "group";
 
 export default function EditBoardGroupPage() {
+  const t = useT();
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -163,7 +165,7 @@ export default function EditBoardGroupPage() {
   } | null> => {
     if (!isSignedIn || !groupId) return null;
     if (groupBoardsQuery.data?.status !== 200) {
-      setAssignmentsError("Group boards are not loaded yet.");
+      setAssignmentsError(t("boardGroup.groupBoardsNotLoaded"));
       return null;
     }
 
@@ -211,8 +213,7 @@ export default function EditBoardGroupPage() {
     setAssignmentsResult({ updated, failed: failures.length });
     if (failures.length > 0) {
       setAssignmentsError(
-        `Failed to update ${failures.length} board assignment${
-          failures.length === 1 ? "" : "s"
+        `${t("common.failedToUpdate")} ${failures.length} ${t("boardGroup.boardAssignment")}${failures.length === 1 ? "" : "s"
         }.`,
       );
     }
@@ -228,7 +229,7 @@ export default function EditBoardGroupPage() {
     if (!isSignedIn || !groupId) return;
     const trimmedName = resolvedName.trim();
     if (!trimmedName) {
-      setError("Group name is required.");
+      setError(t("boardGroup.nameRequired"));
       return;
     }
 
@@ -249,7 +250,7 @@ export default function EditBoardGroupPage() {
         data: payload,
       });
       if (result.status !== 200) {
-        setError("Something went wrong.");
+        setError(t("common.somethingWentWrong"));
         return;
       }
 
@@ -266,25 +267,25 @@ export default function EditBoardGroupPage() {
           : err instanceof Error
             ? err.message
             : null;
-      setError(message || "Something went wrong.");
+      setError(message || t("common.somethingWentWrong"));
     } finally {
       setIsAssignmentsSaving(false);
     }
   };
 
   const title = useMemo(
-    () => baseGroup?.name ?? "Edit group",
-    [baseGroup?.name],
+    () => baseGroup?.name ?? t("boardGroup.group"),
+    [baseGroup?.name, t],
   );
 
   return (
     <DashboardPageLayout
       signedOut={{
-        message: "Sign in to edit board groups.",
+        message: t("boardGroup.signInToEdit"),
         forceRedirectUrl: `/board-groups/${groupId ?? ""}/edit`,
       }}
       title={title}
-      description="Update the shared context that connects boards in this group."
+      description={t("boardGroup.editDescription")}
     >
       <form
         onSubmit={handleSubmit}
@@ -292,19 +293,21 @@ export default function EditBoardGroupPage() {
       >
         {assignFailedCount && Number.isFinite(assignFailedCount) ? (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
-            Group was created, but {assignFailedCount} board assignment
-            {assignFailedCount === 1 ? "" : "s"} failed. You can retry below.
+            {t("boardGroup.assignmentsBannerFailed", {
+              count: assignFailedCount,
+              s: assignFailedCount === 1 ? "" : "s",
+            })}
           </div>
         ) : null}
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-900">
-              Group name <span className="text-red-500">*</span>
+              {t("boardGroup.groupName")} <span className="text-red-500">*</span>
             </label>
             <Input
               value={resolvedName}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Group name"
+              placeholder={t("boardGroup.groupName")}
               disabled={isLoading || !baseGroup}
             />
           </div>
@@ -312,12 +315,12 @@ export default function EditBoardGroupPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-900">
-            Description
+            {t("common.description")}
           </label>
           <Textarea
             value={resolvedDescription}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="What ties these boards together?"
+            placeholder={t("boardGroup.editDescriptionPlaceholder")}
             className="min-h-[120px]"
             disabled={isLoading || !baseGroup}
           />
@@ -326,28 +329,27 @@ export default function EditBoardGroupPage() {
         <div className="space-y-2 border-t border-slate-100 pt-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-sm font-medium text-slate-900">Boards</p>
+              <p className="text-sm font-medium text-slate-900">{t("boardGroup.boards")}</p>
               <p className="mt-1 text-xs text-slate-500">
-                Assign boards to this group to share context across related
-                work.
+                {t("boardGroup.assignBoardsHint")}
               </p>
             </div>
             <span className="text-xs text-slate-500">
-              {selectedBoardIds.size} selected
+              {selectedBoardIds.size} {t("common.selected")}
             </span>
           </div>
 
           <Input
             value={boardSearch}
             onChange={(event) => setBoardSearch(event.target.value)}
-            placeholder="Search boards..."
+            placeholder={t("boardGroup.searchBoards")}
             disabled={isLoading || !baseGroup}
           />
 
           <div className="max-h-64 overflow-auto rounded-xl border border-slate-200 bg-slate-50/40">
             {boardsLoading && boards.length === 0 ? (
               <div className="px-4 py-6 text-sm text-slate-500">
-                Loading boards…
+                {t("boardGroup.loadingBoards")}
               </div>
             ) : boardsError ? (
               <div className="px-4 py-6 text-sm text-rose-700">
@@ -355,7 +357,7 @@ export default function EditBoardGroupPage() {
               </div>
             ) : boards.length === 0 ? (
               <div className="px-4 py-6 text-sm text-slate-500">
-                No boards found.
+                {t("boardGroup.noBoardsFound")}
               </div>
             ) : (
               <ul className="divide-y divide-slate-200">
@@ -403,7 +405,7 @@ export default function EditBoardGroupPage() {
                               </span>
                               {isAlreadyGrouped ? (
                                 <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-amber-900">
-                                  in another group
+                                  {t("boardGroup.inAnotherGroup")}
                                 </span>
                               ) : null}
                             </div>
@@ -421,9 +423,11 @@ export default function EditBoardGroupPage() {
           ) : null}
           {assignmentsResult ? (
             <p className="text-sm text-slate-700">
-              Updated {assignmentsResult.updated} board
-              {assignmentsResult.updated === 1 ? "" : "s"}, failed{" "}
-              {assignmentsResult.failed}.
+              {t("boardGroup.updatedBoards", {
+                updated: assignmentsResult.updated,
+                s: assignmentsResult.updated === 1 ? "" : "s",
+                failed: assignmentsResult.failed,
+              })}
             </p>
           ) : null}
         </div>
@@ -439,13 +443,13 @@ export default function EditBoardGroupPage() {
             onClick={() => router.push(`/board-groups/${groupId ?? ""}`)}
             disabled={isLoading}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="submit"
             disabled={isLoading || !baseGroup || !isFormReady}
           >
-            {isLoading ? "Saving…" : "Save changes"}
+            {isLoading ? t("boardGroup.saving") : t("common.saveChanges")}
           </Button>
         </div>
       </form>

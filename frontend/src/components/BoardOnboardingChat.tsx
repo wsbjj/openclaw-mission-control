@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePageActive } from "@/hooks/usePageActive";
+import { useT } from "@/lib/i18n";
 
 import {
   answerOnboardingApiV1BoardsBoardIdOnboardingAnswerPost,
@@ -141,6 +142,7 @@ export function BoardOnboardingChat({
   onConfirmed: (board: BoardRead) => void;
 }) {
   const isPageActive = usePageActive();
+  const t = useT();
   const [session, setSession] = useState<BoardOnboardingRead | null>(null);
   const [loading, setLoading] = useState(false);
   const [awaitingAssistantFingerprint, setAwaitingAssistantFingerprint] =
@@ -381,7 +383,7 @@ export function BoardOnboardingChat({
   return (
     <div className="space-y-4">
       <DialogHeader>
-        <DialogTitle>Board onboarding</DialogTitle>
+        <DialogTitle>{t("onboarding.title")}</DialogTitle>
       </DialogHeader>
 
       {error ? (
@@ -393,7 +395,7 @@ export function BoardOnboardingChat({
       {draft ? (
         <div className="space-y-3">
           <p className="text-sm text-slate-600">
-            Review the lead agent draft and confirm.
+            {t("onboarding.reviewDraft")}
           </p>
           {isAwaitingAgent ? (
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
@@ -401,51 +403,51 @@ export function BoardOnboardingChat({
                 <RefreshCcw className="h-4 w-4 animate-spin text-slate-500" />
                 <span>
                   {awaitingKind === "extra_context"
-                    ? "Updating the draft…"
-                    : "Waiting for the agent…"}
+                    ? t("onboarding.updatingDraft")
+                    : t("onboarding.waitingForAgent")}
                 </span>
               </div>
               {lastSubmittedAnswer ? (
                 <p className="mt-2 text-xs text-slate-600">
-                  Sent:{" "}
+                  {t("onboarding.sent")}{" "}
                   <span className="font-medium text-slate-900">
                     {lastSubmittedAnswer}
                   </span>
                 </p>
               ) : null}
               <p className="mt-1 text-xs text-slate-500">
-                This usually takes a few seconds.
+                {t("onboarding.usuallyFewSeconds")}
               </p>
             </div>
           ) : null}
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-            <p className="font-semibold text-slate-900">Objective</p>
+            <p className="font-semibold text-slate-900">{t("onboarding.objective")}</p>
             <p className="text-slate-700">{draft.objective || "—"}</p>
-            <p className="mt-3 font-semibold text-slate-900">Success metrics</p>
+            <p className="mt-3 font-semibold text-slate-900">{t("onboarding.successMetrics")}</p>
             <pre className="mt-1 whitespace-pre-wrap text-xs text-slate-600">
               {JSON.stringify(draft.success_metrics ?? {}, null, 2)}
             </pre>
-            <p className="mt-3 font-semibold text-slate-900">Target date</p>
+            <p className="mt-3 font-semibold text-slate-900">{t("onboarding.targetDate")}</p>
             <p className="text-slate-700">{draft.target_date || "—"}</p>
-            <p className="mt-3 font-semibold text-slate-900">Board type</p>
+            <p className="mt-3 font-semibold text-slate-900">{t("onboarding.boardType")}</p>
             <p className="text-slate-700">{draft.board_type || "goal"}</p>
             {draft.user_profile ? (
               <>
                 <p className="mt-4 font-semibold text-slate-900">
-                  User profile
+                  {t("onboarding.userProfile")}
                 </p>
                 <p className="text-slate-700">
                   <span className="font-medium text-slate-900">
-                    Preferred name:
+                    {t("onboarding.preferredName")}
                   </span>{" "}
                   {draft.user_profile.preferred_name || "—"}
                 </p>
                 <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Pronouns:</span>{" "}
+                  <span className="font-medium text-slate-900">{t("onboarding.pronouns")}</span>{" "}
                   {draft.user_profile.pronouns || "—"}
                 </p>
                 <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Timezone:</span>{" "}
+                  <span className="font-medium text-slate-900">{t("onboarding.timezone")}</span>{" "}
                   {draft.user_profile.timezone || "—"}
                 </p>
               </>
@@ -453,25 +455,25 @@ export function BoardOnboardingChat({
             {draft.lead_agent ? (
               <>
                 <p className="mt-4 font-semibold text-slate-900">
-                  Lead agent preferences
+                  {t("onboarding.leadAgentPrefs")}
                 </p>
                 <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Name:</span>{" "}
+                  <span className="font-medium text-slate-900">{t("onboarding.name")}</span>{" "}
                   {draft.lead_agent.name || "—"}
                 </p>
                 <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Role:</span>{" "}
+                  <span className="font-medium text-slate-900">{t("onboarding.role")}</span>{" "}
                   {draft.lead_agent.identity_profile?.role || "—"}
                 </p>
                 <p className="text-slate-700">
                   <span className="font-medium text-slate-900">
-                    Communication:
+                    {t("onboarding.communication")}
                   </span>{" "}
                   {draft.lead_agent.identity_profile?.communication_style ||
                     "—"}
                 </p>
                 <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Emoji:</span>{" "}
+                  <span className="font-medium text-slate-900">{t("onboarding.emoji")}</span>{" "}
                   {draft.lead_agent.identity_profile?.emoji || "—"}
                 </p>
               </>
@@ -480,7 +482,7 @@ export function BoardOnboardingChat({
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900">
-                Extra context (optional)
+                {t("onboarding.extraContext")}
               </p>
               <Button
                 variant="ghost"
@@ -489,7 +491,7 @@ export function BoardOnboardingChat({
                 onClick={() => setExtraContextOpen((prev) => !prev)}
                 disabled={loading || isAwaitingAgent}
               >
-                {extraContextOpen ? "Hide" : "Add"}
+                {extraContextOpen ? t("onboarding.hide") : t("onboarding.add")}
               </Button>
             </div>
             {extraContextOpen ? (
@@ -497,7 +499,7 @@ export function BoardOnboardingChat({
                 <Textarea
                   ref={extraContextRef}
                   className="min-h-[84px]"
-                  placeholder="Anything else the agent should know before you confirm? (constraints, context, preferences, links, etc.)"
+                  placeholder={t("onboarding.contextPlaceholder")}
                   value={extraContext}
                   onChange={(event) => setExtraContext(event.target.value)}
                   onKeyDown={(event) => {
@@ -521,20 +523,19 @@ export function BoardOnboardingChat({
                     }
                   >
                     {loading
-                      ? "Sending..."
+                      ? t("onboarding.sending")
                       : isAwaitingAgent
-                        ? "Waiting..."
-                        : "Send context"}
+                        ? t("onboarding.waiting")
+                        : t("onboarding.sendContext")}
                   </Button>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Tip: press Enter to send. Shift+Enter for a newline.
+                  {t("onboarding.tipEnter")}
                 </p>
               </div>
             ) : (
               <p className="mt-2 text-xs text-slate-600">
-                Add anything that wasn&apos;t covered in the agent&apos;s
-                questions.
+                {t("onboarding.addAnything")}
               </p>
             )}
           </div>
@@ -544,7 +545,7 @@ export function BoardOnboardingChat({
               disabled={loading || isAwaitingAgent}
               type="button"
             >
-              Confirm goal
+              {t("onboarding.confirmGoal")}
             </Button>
           </DialogFooter>
         </div>
@@ -559,20 +560,20 @@ export function BoardOnboardingChat({
                 <RefreshCcw className="h-4 w-4 animate-spin text-slate-500" />
                 <span>
                   {awaitingKind === "extra_context"
-                    ? "Updating the draft…"
-                    : "Waiting for the next question…"}
+                    ? t("onboarding.updatingDraft")
+                    : t("onboarding.waitingNextQuestion")}
                 </span>
               </div>
               {lastSubmittedAnswer ? (
                 <p className="mt-2 text-xs text-slate-600">
-                  Sent:{" "}
+                  {t("onboarding.sent")}{" "}
                   <span className="font-medium text-slate-900">
                     {lastSubmittedAnswer}
                   </span>
                 </p>
               ) : null}
               <p className="mt-1 text-xs text-slate-500">
-                This usually takes a few seconds.
+                {t("onboarding.usuallyFewSeconds")}
               </p>
             </div>
           ) : null}
@@ -598,7 +599,7 @@ export function BoardOnboardingChat({
               <Textarea
                 ref={freeTextRef}
                 className="min-h-[84px]"
-                placeholder="Type your answer..."
+                placeholder={t("onboarding.typeAnswer")}
                 value={otherText}
                 onChange={(event) => setOtherText(event.target.value)}
                 onKeyDown={(event) => {
@@ -612,7 +613,7 @@ export function BoardOnboardingChat({
                 disabled={loading || isAwaitingAgent}
               />
               <p className="text-xs text-slate-500">
-                Tip: press Enter to send. Shift+Enter for a newline.
+                {t("onboarding.tipEnter")}
               </p>
             </div>
           ) : null}
@@ -628,13 +629,13 @@ export function BoardOnboardingChat({
                 (wantsFreeText && !otherText.trim())
               }
             >
-              {loading ? "Sending..." : isAwaitingAgent ? "Waiting..." : "Next"}
+              {loading ? t("onboarding.sending") : isAwaitingAgent ? t("onboarding.waiting") : t("onboarding.next")}
             </Button>
             {loading ? (
-              <p className="text-xs text-slate-500">Sending your answer…</p>
+              <p className="text-xs text-slate-500">{t("onboarding.sendingAnswer")}</p>
             ) : isAwaitingAgent ? (
               <p className="text-xs text-slate-500">
-                Waiting for the agent to respond…
+                {t("onboarding.waitingAgentRespond")}
               </p>
             ) : null}
           </div>
@@ -642,8 +643,8 @@ export function BoardOnboardingChat({
       ) : (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
           {loading
-            ? "Waiting for the lead agent..."
-            : "Preparing onboarding..."}
+            ? t("onboarding.waitingLeadAgent")
+            : t("onboarding.preparingOnboarding")}
         </div>
       )}
     </div>
