@@ -23,6 +23,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import { useUrlSorting } from "@/lib/use-url-sorting";
+import { useT } from "@/lib/i18n";
 
 const PACKS_SORTABLE_COLUMNS = [
   "name",
@@ -32,19 +33,11 @@ const PACKS_SORTABLE_COLUMNS = [
   "updated_at",
 ];
 
-/**
- * Skill packs admin page.
- *
- * Notes:
- * - Sync actions are intentionally serialized (per-pack) to avoid a thundering herd
- *   of GitHub fetches / backend sync jobs.
- * - We keep UI state (`syncingPackIds`, warnings) local; the canonical list is
- *   still React Query (invalidate after sync/delete).
- */
 export default function SkillsPacksPage() {
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
+  const t = useT();
   const [deleteTarget, setDeleteTarget] = useState<SkillPackRead | null>(null);
   const [syncingPackIds, setSyncingPackIds] = useState<Set<string>>(new Set());
   const [isSyncingAll, setIsSyncingAll] = useState(false);
@@ -150,8 +143,6 @@ export default function SkillsPacksPage() {
     try {
       let hasFailure = false;
 
-      // Run sequentially so the UI remains predictable and the backend isn't hit with
-      // concurrent sync bursts (which can trigger rate-limits).
       for (const pack of packs) {
         if (!pack.id) continue;
         setSyncingPackIds((previous) => {
@@ -180,7 +171,7 @@ export default function SkillsPacksPage() {
       }
 
       if (hasFailure) {
-        setSyncAllError("Some skill packs failed to sync. Please try again.");
+        setSyncAllError(t("skillPack.someSyncFailed"));
       }
     } finally {
       setIsSyncingAll(false);
@@ -194,11 +185,14 @@ export default function SkillsPacksPage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to manage skill packs.",
+          message: t("skillPack.signInToManage"),
           forceRedirectUrl: "/skills/packs",
         }}
-        title="Skill Packs"
-        description={`${packs.length} pack${packs.length === 1 ? "" : "s"} configured.`}
+        title={t("skillPack.skillPacks")}
+        description={t("skillPack.packsConfigured", {
+          count: packs.length,
+          s: packs.length === 1 ? "" : "s",
+        })}
         headerActions={
           isAdmin ? (
             <div className="flex items-center gap-2">
@@ -215,19 +209,19 @@ export default function SkillsPacksPage() {
                   void handleSyncAllPacks();
                 }}
               >
-                {isSyncingAll ? "Syncing all..." : "Sync all"}
+                {isSyncingAll ? t("skillPack.syncingAll") : t("skillPack.syncAll")}
               </button>
               <Link
                 href="/skills/packs/new"
                 className={buttonVariants({ variant: "primary", size: "md" })}
               >
-                Add pack
+                {t("skillPack.addPack")}
               </Link>
             </div>
           ) : null
         }
         isAdmin={isAdmin}
-        adminOnlyMessage="Only organization owners and admins can manage skill packs."
+        adminOnlyMessage={t("skillPack.adminOnly")}
         stickyHeader
       >
         <div className="space-y-6">
@@ -246,10 +240,10 @@ export default function SkillsPacksPage() {
               }}
               onDelete={setDeleteTarget}
               emptyState={{
-                title: "No packs yet",
-                description: "Add your first skill URL pack to get started.",
+                title: t("skillPack.noPacksYet"),
+                description: t("skillPack.noPacksDescription"),
                 actionHref: "/skills/packs/new",
-                actionLabel: "Add your first pack",
+                actionLabel: t("skillPack.addFirstPack"),
               }}
             />
           </div>
@@ -287,12 +281,13 @@ export default function SkillsPacksPage() {
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        ariaLabel="Delete skill pack"
-        title="Delete skill pack"
+        ariaLabel={t("skillPack.deletePack")}
+        title={t("skillPack.deletePack")}
         description={
           <>
-            This will remove <strong>{deleteTarget?.name}</strong> from your
-            pack list. This action cannot be undone.
+            {t("skillPack.deleteConfirmStart")}{" "}
+            <strong>{deleteTarget?.name}</strong>{" "}
+            {t("skillPack.deleteConfirmEnd")}
           </>
         }
         errorMessage={deleteMutation.error?.message}

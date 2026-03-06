@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useT } from "@/lib/i18n";
 
 const MARKETPLACE_SKILLS_SORTABLE_COLUMNS = [
   "name",
@@ -145,18 +146,6 @@ function parsePageSizeParam(value: string | null) {
   return MARKETPLACE_DEFAULT_PAGE_SIZE;
 }
 
-/**
- * Skills Marketplace admin page.
- *
- * Data-flow notes:
- * - URL query params are treated as the shareable source-of-truth for filters
- *   and pagination (we mirror local state -> URL via `router.replace`).
- * - We keep a *separate* query (without pagination) for building filter option
- *   lists (categories/risks) so options don't disappear just because the current
- *   page is filtered/paginated.
- * - Total row count is best-effort: when the API provides `x-total-count`, we
- *   use it; otherwise we infer whether there is a next page from page-size.
- */
 export default function SkillsMarketplacePage() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -164,6 +153,7 @@ export default function SkillsMarketplacePage() {
   const searchParams = useSearchParams();
   const { isSignedIn } = useAuth();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
+  const t = useT();
   const [selectedSkill, setSelectedSkill] =
     useState<MarketplaceSkillCardRead | null>(null);
   const [gatewayInstalledById, setGatewayInstalledById] = useState<
@@ -259,8 +249,6 @@ export default function SkillsMarketplacePage() {
     resolvedGatewayId,
     selectedPackId,
   ]);
-  // Fetch a non-paginated (or minimally constrained) slice for building filter options.
-  // Keeping this separate avoids "missing" categories/risks when the main list is paginated.
   const filterOptionsParams = useMemo<MarketplaceSkillListParams>(() => {
     const params: MarketplaceSkillListParams = {
       gateway_id: resolvedGatewayId,
@@ -328,8 +316,6 @@ export default function SkillsMarketplacePage() {
   );
 
   const filteredSkills = useMemo(() => skills, [skills]);
-  // Prefer the API total-count header when available (true pagination).
-  // When missing, we fall back to a heuristic for "has next page".
   const totalCountInfo = useMemo(() => {
     if (skillsQuery.data?.status !== 200) {
       return { hasKnownTotal: false, total: skills.length };
@@ -451,9 +437,6 @@ export default function SkillsMarketplacePage() {
     }
   }, [currentPage, totalCountInfo.hasKnownTotal, totalPages]);
 
-  // Mirror local filter/page state back into the URL so the view is shareable and
-  // back/forward navigation works. We use `replace` (not push) to avoid filling
-  // browser history with every keystroke / filter tweak.
   useEffect(() => {
     const nextParams = new URLSearchParams(searchParams.toString());
     const normalizedSearchForUrl = searchTerm.trim();
@@ -506,10 +489,6 @@ export default function SkillsMarketplacePage() {
   ]);
 
   const loadSkillsByGateway = useCallback(async () => {
-    // NOTE: This is technically N+1 (one request per gateway). We intentionally
-    // parallelize requests to keep the UI responsive and avoid slow sequential
-    // fetches. If this becomes a bottleneck for large gateway counts, add a
-    // backend batch endpoint to return installation state across all gateways.
     const gatewaySkills = await Promise.all(
       gateways.map(async (gateway) => {
         const response = await listMarketplaceSkillsApiV1SkillsMarketplaceGet({
@@ -721,7 +700,7 @@ export default function SkillsMarketplacePage() {
         setGatewayStatusError(
           error instanceof Error
             ? error.message
-            : "Unable to load gateway status.",
+            : t("marketplace.unableToLoadGatewayStatus"),
         );
       } finally {
         if (!cancelled) {
@@ -735,7 +714,7 @@ export default function SkillsMarketplacePage() {
     return () => {
       cancelled = true;
     };
-  }, [gateways, loadSkillsByGateway, selectedSkill]);
+  }, [gateways, loadSkillsByGateway, selectedSkill, t]);
 
   const mutationError =
     installMutation.error?.message ?? uninstallMutation.error?.message ?? null;
@@ -769,37 +748,40 @@ export default function SkillsMarketplacePage() {
     <>
       <DashboardPageLayout
         signedOut={{
-          message: "Sign in to manage marketplace skills.",
+          message: t("marketplace.signInToManage"),
           forceRedirectUrl: "/skills/marketplace",
         }}
-        title="Skills Marketplace"
+        title={t("marketplace.title")}
         description={
           selectedPack
-            ? `${totalSkills} skill${
-                totalSkills === 1 ? "" : "s"
-              } for ${selectedPack.name}.`
-            : `${totalSkills} skill${
-                totalSkills === 1 ? "" : "s"
-              } synced from packs.`
+            ? t("marketplace.skillsForPack", {
+              count: totalSkills,
+              s: totalSkills === 1 ? "" : "s",
+              name: selectedPack.name,
+            })
+            : t("marketplace.skillsSynced", {
+              count: totalSkills,
+              s: totalSkills === 1 ? "" : "s",
+            })
         }
         isAdmin={isAdmin}
-        adminOnlyMessage="Only organization owners and admins can manage skills."
+        adminOnlyMessage={t("marketplace.adminOnly")}
         stickyHeader
       >
         <div className="space-y-6">
           {gateways.length === 0 ? (
             <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
               <p className="font-medium text-slate-900">
-                No gateways available yet.
+                {t("marketplace.noGatewaysTitle")}
               </p>
               <p className="mt-2">
-                Create a gateway first, then return here to manage installs.
+                {t("marketplace.noGatewaysDescription")}
               </p>
               <Link
                 href="/gateways/new"
                 className={`${buttonVariants({ variant: "primary", size: "md" })} mt-4`}
               >
-                Create gateway
+                {t("marketplace.createGateway")}
               </Link>
             </div>
           ) : (
@@ -811,13 +793,13 @@ export default function SkillsMarketplacePage() {
                       htmlFor="marketplace-search"
                       className="mb-1 block text-sm font-medium text-slate-700"
                     >
-                      Search
+                      {t("marketplace.search")}
                     </label>
                     <Input
                       id="marketplace-search"
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Search by name, description, category, pack, source..."
+                      placeholder={t("marketplace.searchPlaceholder")}
                       type="search"
                     />
                   </div>
@@ -826,7 +808,7 @@ export default function SkillsMarketplacePage() {
                       htmlFor="marketplace-category-filter"
                       className="mb-1 block text-sm font-medium text-slate-700"
                     >
-                      Category
+                      {t("marketplace.category")}
                     </label>
                     <Select
                       value={selectedCategory}
@@ -836,10 +818,10 @@ export default function SkillsMarketplacePage() {
                         id="marketplace-category-filter"
                         className="h-11"
                       >
-                        <SelectValue placeholder="All categories" />
+                        <SelectValue placeholder={t("marketplace.allCategories")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All categories</SelectItem>
+                        <SelectItem value="all">{t("marketplace.allCategories")}</SelectItem>
                         {categoryFilterOptions.map((category) => (
                           <SelectItem
                             key={category.value}
@@ -856,7 +838,7 @@ export default function SkillsMarketplacePage() {
                       htmlFor="marketplace-risk-filter"
                       className="mb-1 block text-sm font-medium text-slate-700"
                     >
-                      Risk
+                      {t("marketplace.risk")}
                     </label>
                     <Select
                       value={selectedRisk}
@@ -866,10 +848,10 @@ export default function SkillsMarketplacePage() {
                         id="marketplace-risk-filter"
                         className="h-11"
                       >
-                        <SelectValue placeholder="Safe" />
+                        <SelectValue placeholder={t("marketplace.safe")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All risks</SelectItem>
+                        <SelectItem value="all">{t("marketplace.allRisks")}</SelectItem>
                         {riskFilterOptions.map((risk) => (
                           <SelectItem key={risk} value={risk}>
                             {formatRiskLabel(risk)}
@@ -893,22 +875,21 @@ export default function SkillsMarketplacePage() {
                   isMutating={isMutating}
                   onSkillClick={setSelectedSkill}
                   emptyState={{
-                    title: "No marketplace skills yet",
-                    description:
-                      "Add packs first, then synced skills will appear here.",
+                    title: t("marketplace.noSkillsYet"),
+                    description: t("marketplace.noSkillsDescription"),
                     actionHref: "/skills/packs/new",
-                    actionLabel: "Add your first pack",
+                    actionLabel: t("marketplace.addFirstPack"),
                   }}
                 />
               </div>
               <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
                 <div className="flex items-center gap-3">
                   <p>
-                    Showing {rangeStart}-{rangeEnd} of {totalSkills}
+                    {t("marketplace.showing", { start: rangeStart, end: rangeEnd, total: totalSkills })}
                   </p>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      Rows
+                      {t("marketplace.rows")}
                     </span>
                     <Select
                       value={String(pageSize)}
@@ -949,12 +930,12 @@ export default function SkillsMarketplacePage() {
                       setCurrentPage((prev) => Math.max(1, prev - 1))
                     }
                   >
-                    Previous
+                    {t("marketplace.previous")}
                   </Button>
                   <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
                     {totalCountInfo.hasKnownTotal
-                      ? `Page ${currentPage} of ${totalPages}`
-                      : `Page ${currentPage}`}
+                      ? t("marketplace.pageOf", { page: currentPage, total: totalPages })
+                      : t("marketplace.page", { page: currentPage })}
                   </span>
                   <Button
                     type="button"
@@ -969,7 +950,7 @@ export default function SkillsMarketplacePage() {
                       );
                     }}
                   >
-                    Next
+                    {t("marketplace.next")}
                   </Button>
                 </div>
               </div>

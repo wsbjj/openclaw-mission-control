@@ -11,38 +11,40 @@ import { useCreateSkillPackApiV1SkillsPacksPost } from "@/api/generated/skills/s
 import { MarketplaceSkillForm } from "@/components/skills/MarketplaceSkillForm";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
+import { useT } from "@/lib/i18n";
 
 export default function NewSkillPackPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
+  const t = useT();
 
   const createMutation = useCreateSkillPackApiV1SkillsPacksPost<ApiError>();
 
   return (
     <DashboardPageLayout
       signedOut={{
-        message: "Sign in to add skill packs.",
+        message: t("skillPack.signInToAdd"),
         forceRedirectUrl: "/skills/packs/new",
       }}
-      title="Add skill pack"
-      description="Add a new skill URL pack for your organization."
+      title={t("skillPack.addPack")}
+      description={t("skillPack.addDescription")}
       isAdmin={isAdmin}
-      adminOnlyMessage="Only organization owners and admins can manage skill packs."
+      adminOnlyMessage={t("skillPack.adminOnly")}
       stickyHeader
     >
       <MarketplaceSkillForm
-        sourceLabel="Pack URL"
-        nameLabel="Pack name (optional)"
-        descriptionLabel="Pack description (optional)"
-        descriptionPlaceholder="Short summary shown in the packs list."
-        branchLabel="Pack branch (optional)"
+        sourceLabel={t("skillPack.packUrl")}
+        nameLabel={t("skillPack.nameLabel")}
+        descriptionLabel={t("skillPack.descriptionLabel")}
+        descriptionPlaceholder={t("skillPack.descriptionPlaceholder")}
+        branchLabel={t("skillPack.branchLabel")}
         branchPlaceholder="main"
         showBranch
-        requiredUrlMessage="Pack URL is required."
-        invalidUrlMessage="Pack URL must be a GitHub repository URL (https://github.com/<owner>/<repo>)."
-        submitLabel="Add pack"
-        submittingLabel="Adding..."
+        requiredUrlMessage={t("skillPack.urlRequired")}
+        invalidUrlMessage={t("skillPack.urlInvalid")}
+        submitLabel={t("skillPack.addPack")}
+        submittingLabel={t("skillPack.adding")}
         isSubmitting={createMutation.isPending}
         onCancel={() => router.push("/skills/packs")}
         onSubmit={async (values) => {
@@ -56,7 +58,7 @@ export default function NewSkillPackPage() {
             },
           });
           if (result.status !== 200) {
-            throw new Error("Unable to add pack.");
+            throw new Error(t("skillPack.unableToAdd"));
           }
           router.push("/skills/packs");
         }}

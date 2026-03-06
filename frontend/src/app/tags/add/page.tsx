@@ -11,11 +11,13 @@ import { useCreateTagApiV1TagsPost } from "@/api/generated/tags/tags";
 import { TagForm } from "@/components/tags/TagForm";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
+import { useT } from "@/lib/i18n";
 
 export default function NewTagPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
+  const t = useT();
 
   const createMutation = useCreateTagApiV1TagsPost<ApiError>({
     mutation: {
@@ -26,26 +28,26 @@ export default function NewTagPage() {
   return (
     <DashboardPageLayout
       signedOut={{
-        message: "Sign in to create tags.",
+        message: t("tag.signInToCreate"),
         forceRedirectUrl: "/tags/add",
         signUpForceRedirectUrl: "/tags/add",
       }}
-      title="Create tag"
-      description="Define a reusable tag for task grouping."
+      title={t("tag.createTag")}
+      description={t("tag.createDescription")}
       isAdmin={isAdmin}
-      adminOnlyMessage="Only organization owners and admins can manage tags."
+      adminOnlyMessage={t("tag.adminOnly")}
     >
       <TagForm
         isSubmitting={createMutation.isPending}
-        submitLabel="Create tag"
-        submittingLabel="Creating…"
+        submitLabel={t("tag.createTag")}
+        submittingLabel={t("tag.creating")}
         onCancel={() => router.push("/tags")}
         onSubmit={async (values) => {
           const result = await createMutation.mutateAsync({
             data: values,
           });
           if (result.status !== 200) {
-            throw new Error("Unable to create tag.");
+            throw new Error(t("tag.unableToCreate"));
           }
           router.push("/tags");
         }}
