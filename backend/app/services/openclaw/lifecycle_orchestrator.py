@@ -102,6 +102,12 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
         await self.session.flush()
 
         if not gateway.url:
+            # 网关未配置 URL 时无法执行下发，避免 agent 长期停留在 provisioning
+            locked.last_provision_error = "Gateway URL is not set; configure the gateway URL and retry."
+            if locked.status in {"updating", "provisioning"}:
+                locked.status = "offline"
+            locked.updated_at = utcnow()
+            self.session.add(locked)
             await self.session.commit()
             await self.session.refresh(locked)
             return locked
@@ -148,6 +154,26 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
                 ) from exc
             return locked
         except (OSError, RuntimeError, ValueError) as exc:
+            locked.last_provision_error = str(exc)
+            locked.updated_at = utcnow()
+            if locked.status in {"updating", "provisioning"}:
+                locked.status = "offline"
+            self.session.add(locked)
+            await self.session.commit()
+            await self.session.refresh(locked)
+            if raise_gateway_errors:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Unexpected error {action}ing gateway provisioning.",
+                ) from exc
+            return locked
+        except Exception as exc:
+            # 任何未显式处理的异常都应将 agent 设为 offline，避免长期停留在 provisioning
+            self.logger.exception(
+                "lifecycle.run_lifecycle.unexpected_error agent_id=%s action=%s",
+                locked.id,
+                action,
+            )
             locked.last_provision_error = str(exc)
             locked.updated_at = utcnow()
             if locked.status in {"updating", "provisioning"}:
